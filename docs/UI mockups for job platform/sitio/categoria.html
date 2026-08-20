@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Categoría · AIUTO</title>
+<meta name="description" content="Plantilla maestra de categoría: servicios, propuesta y formulario de contacto.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aiuto.com.mx/categoria.html">
+<link rel="icon" type="image/png" href="assets/aiuto-isotipo.png">
+<link rel="apple-touch-icon" href="assets/aiuto-isotipo.png">
+<meta name="theme-color" content="#572967">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AIUTO">
+<meta property="og:locale" content="es_MX">
+<meta property="og:title" content="Categoría · AIUTO">
+<meta property="og:description" content="Plantilla maestra de categoría: servicios, propuesta y formulario de contacto.">
+<meta property="og:url" content="https://aiuto.com.mx/categoria.html">
+<meta property="og:image" content="https://aiuto.com.mx/assets/aiuto-isotipo.png">
+<meta name="twitter:card" content="summary">
+</head>
+<body data-page="categoria">
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="nav" data-open="false">
+  <div class="nav__inner">
+    <a class="nav__brand" href="index.html"><img src="assets/aiuto-lockup.png" alt="AIUTO" width="271" height="92"></a>
+    <button class="nav__toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="menu-principal" aria-label="Abrir menú">Menú</button>
+    <nav class="nav__links" id="menu-principal" aria-label="Principal">
+      <a href="index.html">Inicio</a>
+      <a href="nosotros.html">Nosotros</a>
+      <a href="empresas.html">Para Empresas</a>
+      <a href="talento.html">Para Talento</a>
+      <a href="categorias.html" aria-current="page">Categorías</a>
+      <a href="bolsa.html">Bolsa de Trabajo</a>
+      <a href="contacto.html">Contacto</a>
+      <a class="nav__cta" href="contacto.html">Solicita un asesor</a>
+    </nav>
+    <a class="btn btn-primary" href="contacto.html">Solicita un asesor</a>
+  </div>
+</header>
+<main id="contenido">
+<div class="cat-chips"><div class="wrap" data-cat-chips><!-- main.js: chips de las 7 categorías --></div></div>
+<section class="cat-hero">
+  <i style="left:-40px;top:-40px;width:180px;height:180px"></i>
+  <i style="left:180px;bottom:-90px;width:220px;height:220px;background:rgba(255,255,255,.05)"></i>
+  <i style="left:430px;top:-70px;width:130px;height:130px"></i>
+  <div class="wrap" style="max-width:1240px">
+    <a href="categorias.html" style="font-size:13px;font-weight:600;color:rgba(255,255,255,.8)">← Todas las categorías</a>
+    <div class="cat-hero__icon" data-cat-icon><svg viewBox="0 0 24 24" aria-hidden="true"><path d=""></path></svg></div>
+    <h1 class="h1" style="font-size:46px" data-cat-name>Categoría</h1>
+    <p class="lead" style="margin-top:20px;max-width:520px" data-cat-prop></p>
+  </div>
+</section>
+<section class="wrap">
+  <div class="cat-body">
+    <div class="cat-body__list">
+      <h2 class="h2" style="margin-bottom:24px">¿Qué incluye esta categoría?</h2>
+      <div class="list-rule" data-cat-services></div>
+      <p class="body-sm muted" style="margin-top:26px;max-width:520px;line-height:1.6">Cada solicitud es revisada por un Consultor Senior de la categoría antes de asignar al especialista. Si el reto cruza varias áreas, formamos un equipo multidisciplinario.</p>
+    </div>
+    <div class="cat-body__form">
+      <form class="form-card" data-mock-submit>
+        <div>
+          <h2 class="h3" style="font-size:22px;font-weight:700">¿Tienes un reto en esta área?</h2>
+          <p class="body-sm muted" style="margin-top:6px">Respondemos en menos de 24 horas hábiles.</p>
+        </div>
+        <label class="field"><span>NOMBRE</span><input class="input" type="text" name="nombre" placeholder="Tu nombre" required></label>
+        <label class="field"><span>EMPRESA</span><input class="input" type="text" name="empresa" placeholder="Nombre de tu empresa"></label>
+        <label class="field"><span>CORREO ELECTRÓNICO</span><input class="input" type="email" name="email" placeholder="nombre@empresa.com" required></label>
+        <label class="field"><span>DESCRIPCIÓN DE NECESIDAD</span><textarea class="input" name="necesidad" rows="4" placeholder="Describe brevemente el reto que necesitas resolver"></textarea></label>
+        <label class="hp" aria-hidden="true">No llenar este campo<input type="text" name="_hp" tabindex="-1" autocomplete="off"></label>
+        <p class="note" data-success hidden>Solicitud enviada. Un Consultor Senior te contactará en menos de 24 horas hábiles.</p>
+        <button class="btn btn-primary" type="submit">Enviar solicitud</button>
+        <a class="btn btn-secondary" href="https://wa.me/525500000000">WhatsApp</a>
+      </form>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="footer">
+  <div class="footer__grid">
+    <div>
+      <img src="assets/aiuto-lockup.png" alt="AIUTO" width="271" height="92">
+      <p class="body-sm muted" style="max-width:270px">Ecosistema de soluciones empresariales que conecta necesidades con especialistas capaces de resolverlas.</p>
+    </div>
+    <div><h4>SOLUCIONES</h4><nav><a href="empresas.html">Empresas</a><a href="talento.html">Talento</a><a href="bolsa.html">Bolsa de Trabajo</a></nav></div>
+    <div><h4>RECURSOS</h4><nav><a href="#">Blog</a><a href="#">Preguntas frecuentes</a><a href="#">Casos de éxito</a></nav></div>
+    <div><h4>EMPRESA</h4><nav><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a></nav></div>
+    <div><h4>SÍGUENOS</h4><nav><a href="#">LinkedIn</a><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">YouTube</a></nav></div>
+  </div>
+  <div class="footer__legal">
+    <span>© AIUTO</span>
+    <a href="#">Aviso de privacidad</a>
+    <a href="#">Términos y condiciones</a>
+    <a href="ui-kit.html">AIUTO UI Kit</a>
+  </div>
+</footer>
+<a class="btn btn-whatsapp wa" href="https://wa.me/525500000000" aria-label="Escríbenos por WhatsApp"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.6-4.8A8.5 8.5 0 1 1 21 11.5Z"></path></svg>WhatsApp</a>
+<script src="categorias.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

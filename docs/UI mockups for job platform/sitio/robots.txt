@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /ui-kit.html
+
+Sitemap: https://aiuto.com.mx/sitemap.xml

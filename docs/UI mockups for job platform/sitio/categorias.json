@@ -1,0 +1,155 @@
+[
+  {
+    "slug": "estrategia",
+    "name": "Consultoría Estratégica",
+    "short": "Estrategia",
+    "color": "#66a2ba",
+    "dark": "#2f6d86",
+    "tint": "#eef4f7",
+    "icon": "M12 4.5v15M4.5 12h15M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z",
+    "desc": "Estrategia, gobierno y gestión del cambio",
+    "prop": "Ordenamos el rumbo: dirección, gobierno y ejecución alineados a resultados medibles.",
+    "services": [
+      "Planeación estratégica",
+      "Gobierno y liderazgo",
+      "Cultura organizacional",
+      "Gestión del cambio",
+      "Diagnóstico organizacional",
+      "Estrategia y modelos de negocio",
+      "Balanced Scorecard",
+      "OKR"
+    ]
+  },
+  {
+    "slug": "comercial",
+    "name": "Comercial y Crecimiento",
+    "short": "Comercial",
+    "color": "#c20e59",
+    "dark": "#96063f",
+    "tint": "#fbeef3",
+    "icon": "M3.5 20.5h17M6 17V9M11 17V4.5M16 17v-6M20.5 17v-9",
+    "desc": "Ventas, marketing y experiencia de cliente",
+    "prop": "Crecimiento con método: demanda, conversión y retención trabajando juntas.",
+    "services": [
+      "Estrategia comercial",
+      "Ventas consultivas",
+      "Marketing y posicionamiento",
+      "Customer Experience",
+      "Customer Success",
+      "CRM",
+      "Inteligencia comercial",
+      "Desarrollo de mercados"
+    ]
+  },
+  {
+    "slug": "capital-humano",
+    "name": "Capital Humano",
+    "short": "Capital Humano",
+    "color": "#7cb39a",
+    "dark": "#3f7a5f",
+    "tint": "#eef5f1",
+    "icon": "M9 8.5a3 3 0 1 0 0-.01M4 20.5c0-3 2.2-5 5-5s5 2 5 5M15.5 15.8c2 .5 3.5 2.3 3.5 4.7M15 4.6a3 3 0 0 1 0 5.8",
+    "desc": "Reclutamiento, talento y desarrollo",
+    "prop": "Atraemos, evaluamos y desarrollamos al talento que tu organización necesita.",
+    "services": [
+      "Reclutamiento",
+      "Atracción de talento",
+      "Headhunting",
+      "Assessment",
+      "Capacitación",
+      "Coaching",
+      "Liderazgo",
+      "Clima y cultura",
+      "Desarrollo organizacional"
+    ]
+  },
+  {
+    "slug": "operaciones",
+    "name": "Operaciones",
+    "short": "Operaciones",
+    "color": "#c21624",
+    "dark": "#94101b",
+    "tint": "#fbeeef",
+    "icon": "M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7ZM12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1",
+    "desc": "Procesos, calidad y productividad",
+    "prop": "Procesos que rinden: menos desperdicio, más capacidad, calidad sostenida.",
+    "services": [
+      "Mapeo y mejora de procesos",
+      "AS-IS / TO-BE",
+      "Lean",
+      "Calidad",
+      "Six Sigma",
+      "Logística",
+      "Productividad",
+      "Seguridad",
+      "ISO",
+      "Mejora continua"
+    ]
+  },
+  {
+    "slug": "tecnologia",
+    "name": "Tecnología e Innovación",
+    "short": "Tecnología",
+    "color": "#572967",
+    "dark": "#3d1c49",
+    "tint": "#f3eff5",
+    "icon": "M8 8h8v8H8zM4.5 4.5h15v15h-15zM12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3",
+    "desc": "Transformación digital, datos y software",
+    "prop": "Tecnología aplicada al negocio, no proyectos de tecnología por sí mismos.",
+    "services": [
+      "Transformación digital",
+      "Inteligencia Artificial",
+      "Automatización",
+      "Desarrollo de software",
+      "CRM / ERP",
+      "Analítica de datos",
+      "Ciberseguridad",
+      "Cloud",
+      "Apps"
+    ]
+  },
+  {
+    "slug": "finanzas",
+    "name": "Finanzas y Administración",
+    "short": "Finanzas",
+    "color": "#cd5d22",
+    "dark": "#9c4415",
+    "tint": "#fbf1ea",
+    "icon": "M3.5 6.5h11v11h-11zM9.5 6.5V3.5h11v11h-3M6 12h6",
+    "desc": "Planeación financiera, fiscal y control",
+    "prop": "Control y claridad financiera para decidir con números confiables.",
+    "services": [
+      "Planeación financiera",
+      "Contabilidad",
+      "Fiscal",
+      "Cashflow",
+      "Auditoría",
+      "Costos",
+      "Presupuestos",
+      "Nómina",
+      "Administración"
+    ]
+  },
+  {
+    "slug": "comex",
+    "name": "Comercio Exterior & Supply Chain",
+    "short": "Comercio Exterior",
+    "color": "#158a92",
+    "dark": "#0f6a70",
+    "tint": "#eaf4f5",
+    "icon": "M3.5 14.5h17l-2.5 6h-12zM12 3.5v11M6.5 9.5h11l1 5M6.5 9.5v5",
+    "desc": "Aduanas, logística y cadena de suministro",
+    "prop": "De origen a última milla, con cumplimiento aduanal y costos bajo control.",
+    "services": [
+      "Importación",
+      "Exportación",
+      "Aduanas",
+      "Logística aérea",
+      "Logística marítima",
+      "Logística terrestre",
+      "Multimodal",
+      "Última milla",
+      "Supply Chain"
+    ]
+  }
+]

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contacto · AIUTO</title>
+<meta name="description" content="Cuéntanos qué necesitas resolver. Un Consultor Senior revisa cada solicitud.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="canonical" href="https://aiuto.com.mx/contacto.html">
+<link rel="icon" type="image/png" href="assets/aiuto-isotipo.png">
+<link rel="apple-touch-icon" href="assets/aiuto-isotipo.png">
+<meta name="theme-color" content="#572967">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AIUTO">
+<meta property="og:locale" content="es_MX">
+<meta property="og:title" content="Contacto · AIUTO">
+<meta property="og:description" content="Cuéntanos qué necesitas resolver. Un Consultor Senior revisa cada solicitud.">
+<meta property="og:url" content="https://aiuto.com.mx/contacto.html">
+<meta property="og:image" content="https://aiuto.com.mx/assets/aiuto-isotipo.png">
+<meta name="twitter:card" content="summary">
+</head>
+<body data-page="contacto">
+<a class="skip-link" href="#contenido">Saltar al contenido</a>
+<header class="nav" data-open="false">
+  <div class="nav__inner">
+    <a class="nav__brand" href="index.html"><img src="assets/aiuto-lockup.png" alt="AIUTO" width="271" height="92"></a>
+    <button class="nav__toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="menu-principal" aria-label="Abrir menú">Menú</button>
+    <nav class="nav__links" id="menu-principal" aria-label="Principal">
+      <a href="index.html">Inicio</a>
+      <a href="nosotros.html">Nosotros</a>
+      <a href="empresas.html">Para Empresas</a>
+      <a href="talento.html">Para Talento</a>
+      <a href="categorias.html">Categorías</a>
+      <a href="bolsa.html">Bolsa de Trabajo</a>
+      <a href="contacto.html" aria-current="page">Contacto</a>
+      <a class="nav__cta" href="contacto.html">Solicita un asesor</a>
+    </nav>
+    <a class="btn btn-primary" href="contacto.html">Solicita un asesor</a>
+  </div>
+</header>
+<main id="contenido">
+<section class="wrap section contact-layout">
+  <div class="contact-layout__info">
+    <h1 class="h1" style="font-size:36px">Contacto AIUTO</h1>
+    <p style="font-size:16px;line-height:1.55;color:var(--ink-2);margin:16px 0 32px">Cuéntanos qué necesitas resolver. Un Consultor Senior revisa cada solicitud.</p>
+    <div class="list-rule">
+      <div style="display:block"><div class="label">WHATSAPP</div><div class="h3" style="font-size:17px;margin-top:6px">+52 55 0000 0000</div></div>
+      <div style="display:block"><div class="label">CORREO ELECTRÓNICO</div><div class="h3" style="font-size:17px;margin-top:6px">contacto@aiuto.mx</div></div>
+      <div style="display:block"><div class="label">HORARIO</div><div class="h3" style="font-size:17px;margin-top:6px">Lun a Vie · 9:00 a 18:00</div></div>
+    </div>
+  </div>
+  <div class="contact-layout__form">
+    <form class="stack" style="gap:16px" data-mock-submit="replace">
+      <div class="grid cols-2">
+        <label class="field"><span>NOMBRE COMPLETO</span><input class="input" type="text" name="nombre" placeholder="Tu nombre" required></label>
+        <label class="field"><span>EMPRESA <span style="font-weight:400;color:var(--disabled);letter-spacing:0">(opcional)</span></span><input class="input" type="text" name="empresa" placeholder="Nombre de tu empresa"></label>
+        <label class="field"><span>CORREO ELECTRÓNICO</span><input class="input" type="email" name="email" placeholder="nombre@empresa.com" required></label>
+        <label class="field"><span>TELÉFONO</span><input class="input" type="tel" name="telefono" placeholder="55 0000 0000"></label>
+        <label class="field"><span>TIPO DE SOLICITUD</span><select class="input" name="tipo"><option>Selecciona una opción</option><option>Solución para mi empresa</option><option>Servicios para talento</option><option>Publicar una vacante</option><option>Quiero ser especialista AIUTO</option></select></label>
+        <label class="field"><span>CATEGORÍA DE INTERÉS</span><select class="input" name="categoria"><option>No estoy seguro / que AIUTO lo defina</option><option>Consultoría Estratégica</option><option>Comercial y Crecimiento</option><option>Capital Humano</option><option>Operaciones</option><option>Tecnología e Innovación</option><option>Finanzas y Administración</option><option>Comercio Exterior &amp; Supply Chain</option></select></label>
+      </div>
+      <label class="field"><span>DESCRIPCIÓN DE NECESIDAD</span><textarea class="input" name="necesidad" rows="5" required placeholder="Describe el reto, el contexto y el resultado que esperas"></textarea></label>
+      <label class="hp" aria-hidden="true">No llenar este campo<input type="text" name="_hp" tabindex="-1" autocomplete="off"></label>
+      <div class="row" style="margin-top:4px">
+        <button class="btn btn-primary" type="submit">Enviar solicitud</button>
+        <a class="btn btn-whatsapp" href="https://wa.me/525500000000">Contactar por WhatsApp</a>
+      </div>
+    </form>
+    <div data-success-panel hidden style="border:1px solid var(--line);border-top:6px solid var(--green);padding:40px">
+      <div class="dia" style="width:42px;height:42px;background:var(--green);margin-bottom:26px"></div>
+      <h2 class="h2">Solicitud enviada</h2>
+      <p class="lead" style="margin-top:14px;max-width:440px">Un Consultor Senior revisará tu caso y te contactará en menos de 24 horas hábiles. Recibirás una copia de tu solicitud por correo.</p>
+      <div class="row" style="margin-top:28px"><a class="btn btn-secondary" href="categorias.html">Explorar categorías</a><a class="btn btn-secondary" href="bolsa.html">Ver Bolsa de Trabajo</a></div>
+    </div>
+  </div>
+  <div class="composition contact-layout__aside" style="height:520px;padding-left:8px">
+    <i style="right:0;top:0;width:88px;height:88px;background:var(--yellow)"></i>
+    <i style="right:70px;bottom:20px;width:120px;height:120px;background:var(--magenta)"></i>
+    <i style="left:0;top:150px;width:56px;height:56px;background:var(--blue)"></i>
+    <div class="photo photo--d" style="left:28px;top:40px;width:300px;height:430px"><span class="mono">foto · asesor aiuto</span></div>
+  </div>
+</section>
+</main>
+<footer class="footer">
+  <div class="footer__grid">
+    <div>
+      <img src="assets/aiuto-lockup.png" alt="AIUTO" width="271" height="92">
+      <p class="body-sm muted" style="max-width:270px">Ecosistema de soluciones empresariales que conecta necesidades con especialistas capaces de resolverlas.</p>
+    </div>
+    <div><h4>SOLUCIONES</h4><nav><a href="empresas.html">Empresas</a><a href="talento.html">Talento</a><a href="bolsa.html">Bolsa de Trabajo</a></nav></div>
+    <div><h4>RECURSOS</h4><nav><a href="#">Blog</a><a href="#">Preguntas frecuentes</a><a href="#">Casos de éxito</a></nav></div>
+    <div><h4>EMPRESA</h4><nav><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a></nav></div>
+    <div><h4>SÍGUENOS</h4><nav><a href="#">LinkedIn</a><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">YouTube</a></nav></div>
+  </div>
+  <div class="footer__legal">
+    <span>© AIUTO</span>
+    <a href="#">Aviso de privacidad</a>
+    <a href="#">Términos y condiciones</a>
+    <a href="ui-kit.html">AIUTO UI Kit</a>
+  </div>
+</footer>
+<a class="btn btn-whatsapp wa" href="https://wa.me/525500000000" aria-label="Escríbenos por WhatsApp"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.6-4.8A8.5 8.5 0 1 1 21 11.5Z"></path></svg>WhatsApp</a>
+<script src="main.js"></script>
+</body>
+</html>
