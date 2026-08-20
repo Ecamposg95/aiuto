@@ -1,0 +1,15 @@
+# Dependencias y artefactos
+node_modules/
+dist/
+*.log
+
+# Sistemas operativos / editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Temporales
+*.tmp
+*.bak

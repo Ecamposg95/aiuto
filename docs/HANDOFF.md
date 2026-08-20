@@ -1,19 +1,20 @@
 # AIUTO — paquete de handoff
 
-Versión: 1.0 · Alcance: sitio institucional (9 pantallas) · Idioma: español (MX)
+Versión: 1.1 · Alcance: sitio institucional (9 pantallas) · Idioma: español (MX)
 
 ## 1. Qué hay en este repositorio
 
 | Ruta | Qué es | Para quién |
 | --- | --- | --- |
-| `sitio/` | Sitio estático real: HTML + CSS separados, una página por archivo. Responsive 1440 / 1024 / 768 / 390. | Desarrollo |
-| `sitio/styles.css` | Hoja única. Los tokens viven en `:root` — editarlos cambia todo el sitio. | Desarrollo |
-| `sitio/main.js` | Comportamiento del prototipo: menú móvil, estados de formulario, búsqueda de vacantes, plantilla de categoría. | Desarrollo |
-| `sitio/categorias.json` / `categorias.js` | Las 7 categorías (color, icono, propuesta, servicios). Alimentan `categoria.html`; el `.js` existe para que la página funcione también abierta con `file://`. | Desarrollo / contenido |
-| `sitio/ui-kit.html` | Foundations y componentes en estados reales. Referencia visual normativa. | Diseño / desarrollo |
-| `AIUTO Website.dc.html` | Mockup navegable de las 9 pantallas (revisión y aprobación). | Cliente / diseño |
-| `entrega/aiuto-prototipo.html` | El mockup en un solo archivo, funciona offline sin dependencias. | Envío por correo |
-| `assets/` | Logos originales (PNG con transparencia). | Todos |
+| `/sitio` | Sitio estático real: HTML + CSS separados, una página por archivo. Responsive 1440 / 1024 / 768 / 390. | Desarrollo |
+| `/sitio/styles.css` | Hoja única. Los tokens viven en `:root` — editarlos cambia todo el sitio. | Desarrollo |
+| `/sitio/main.js` | Comportamiento: menú móvil, validación y estados de formulario, búsqueda y filtros de vacantes, plantilla de categoría. | Desarrollo |
+| `/sitio/categorias.json` / `categorias.js` | Las 7 categorías (color, icono, propuesta, servicios). Alimentan `categoria.html`; el `.js` existe para que la página funcione también abierta con `file://`. | Desarrollo / contenido |
+| `/sitio/ui-kit.html` | Foundations y componentes en estados reales. Referencia visual normativa. | Diseño / desarrollo |
+| `/docs/tokens.json` | Los tokens en formato máquina (Tailwind, Figma Tokens, variables CSS). | Desarrollo / diseño |
+| `/docs/diseno/AIUTO Website.dc.html` | Mockup navegable editable de las 9 pantallas (revisión y aprobación). | Cliente / diseño |
+| `/docs/diseno/aiuto-prototipo.html` | El mockup en un solo archivo, funciona offline sin dependencias. | Envío por correo |
+| `/docs/diseno/assets/` | Logos originales (PNG con transparencia). | Todos |
 
 ## 2. Sistema visual
 
