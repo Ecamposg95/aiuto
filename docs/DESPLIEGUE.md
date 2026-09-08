@@ -1,7 +1,25 @@
 # Despliegue — aiuto.com.mx
 
+**Estado: publicado y verificado el 8 de septiembre de 2026.**
+
 Sitio estático: no requiere Node, PHP ni base de datos. Se sube tal cual a la
 carpeta pública del hosting.
+
+Verificación de la publicación:
+
+| Comprobación | Resultado |
+| --- | --- |
+| `http://aiuto.com.mx/` | 301 → `https://aiuto.com.mx/` |
+| `http://www.aiuto.com.mx/` | 301 → `https://www.aiuto.com.mx/` → 301 → `https://aiuto.com.mx/` |
+| `https://www.aiuto.com.mx/` | 301 → `https://aiuto.com.mx/` |
+| `https://aiuto.com.mx/` y `/contacto.html` | 200 |
+| `https://aiuto.com.mx/ruta-inexistente` | 404 sirviendo `404.html` |
+| `robots.txt`, `sitemap.xml`, `styles.css`, `assets/` | 200 |
+
+Los redirectores hacen bien su trabajo, pero `http://www` da **dos saltos**
+(`http://www` → `https://www` → `https://`). Es correcto y los buscadores lo
+siguen sin problema; si algún día quieres un solo salto, hay que combinar ambas
+condiciones en una sola `RewriteRule` del `.htaccess`. No es urgente.
 
 ## 1. Qué se sube
 
@@ -102,18 +120,14 @@ si un cambio urgente no aparece, renómbralos con versión (`styles.css?v=2` en 
 
 ## 7. Lo que sigue estando pendiente
 
-El sitio se publica con contenido de muestra. Antes de difundirlo:
+El sitio se publicó con contenido de muestra: WhatsApp y correo ficticios,
+enlaces del footer en `#`, vacantes inventadas, fotografía sin sustituir y el
+formulario de contacto sin backend (los mensajes se pierden).
 
-1. **WhatsApp** — `https://wa.me/525500000000` aparece en las 9 páginas. Sustituir
-   por el número real: `grep -rl "525500000000" sitio/`
-2. **Enlaces vacíos** — blog, preguntas frecuentes, casos de éxito, redes sociales,
-   aviso de privacidad y términos apuntan a `#` en el footer.
-3. **Formulario de contacto** — el envío está simulado en `main.js`. Falta
-   conectarlo a correo o CRM (la validación de cliente y el honeypot ya existen).
-4. **Vacantes** — las de `bolsa.html` son de muestra.
-5. **Fotografía** — los marcadores rayados se sustituyen por `<img>` con el mismo
-   `clip-path`; el layout no cambia.
-6. **Analítica y Search Console** — falta el contenedor de analítica y dar de alta
-   `https://aiuto.com.mx/sitemap.xml` en Google Search Console.
+El inventario completo —qué falta, dónde vive cada cosa, qué medidas necesitan
+las fotos y en qué orden conviene atacarlo— está en
+[`CONTENIDO.md`](CONTENIDO.md). Para ver el estado en cualquier momento:
 
-Detalle completo en [`HANDOFF.md`](HANDOFF.md) §6.
+```bash
+python3 tools/aplicar-datos.py --estado
+```

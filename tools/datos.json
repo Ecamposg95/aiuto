@@ -1,0 +1,37 @@
+{
+  "_leeme": "Llena los campos vacíos y ejecuta: python3 tools/aplicar-datos.py --aplicar. Los campos que dejes en \"\" no se tocan. Detalle de cada dato en docs/CONTENIDO.md.",
+  "textos": {
+    "whatsapp_enlace": {
+      "buscar": "https://wa.me/525500000000",
+      "reemplazar": "",
+      "nota": "Número de WhatsApp en formato wa.me, sin + ni espacios. Ej: https://wa.me/5215512345678 (52 = México, 1 = móvil). Aparece en las 9 páginas."
+    },
+    "whatsapp_visible": {
+      "buscar": "+52 55 0000 0000",
+      "reemplazar": "",
+      "nota": "El mismo número, formateado para leerse. Solo en contacto.html."
+    },
+    "correo": {
+      "buscar": "contacto@aiuto.mx",
+      "reemplazar": "",
+      "nota": "Correo de contacto. Ojo: el dominio del sitio es aiuto.com.mx, así que probablemente sea contacto@aiuto.com.mx."
+    },
+    "horario": {
+      "buscar": "Lun a Vie · 9:00 a 18:00",
+      "reemplazar": "",
+      "nota": "Horario de atención mostrado en contacto.html."
+    }
+  },
+  "enlaces": {
+    "_leeme": "URL para cada enlace del footer que hoy apunta a '#'. Deja \"\" para no tocarlo. Ver docs/CONTENIDO.md §3 sobre cuáles conviene ocultar en vez de enlazar.",
+    "LinkedIn": "",
+    "Instagram": "",
+    "Facebook": "",
+    "YouTube": "",
+    "Blog": "",
+    "Preguntas frecuentes": "",
+    "Casos de éxito": "",
+    "Aviso de privacidad": "",
+    "Términos y condiciones": ""
+  }
+}

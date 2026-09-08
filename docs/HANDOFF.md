@@ -96,6 +96,8 @@ Sobre la base 1.0 se aplicó una pasada de refinamiento sin cambiar la direcció
 
 ## 6. Pendientes antes de producción
 
+> Actualizado: el sitio se publicó en `https://aiuto.com.mx` el 2026-09-08 con estos pendientes abiertos. El inventario vivo, con medidas de foto y herramienta de sustitución, está en [`CONTENIDO.md`](CONTENIDO.md).
+
 1. **Fotografía.** Todas las imágenes son marcadores rayados recortados con la geometría del isotipo. Sustituir el `div.photo` por un `<img>` con el mismo `clip-path` y `filter: grayscale(1)`; el layout no cambia.
 2. **Logo monocromático.** Falta la versión de una tinta para fondos cromáticos; hoy se resuelve con caja blanca. Pedir el archivo aislado (también la versión sólo tipográfica).
 3. **Contenido real.** Teléfono, correo, dirección, avisos legales, blog, casos de éxito, redes sociales, el número de WhatsApp (`wa.me/525500000000`) y las vacantes de la bolsa son de muestra.

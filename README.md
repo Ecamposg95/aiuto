@@ -4,7 +4,9 @@
 
 > Conectamos necesidades con soluciones que generan resultados.
 
-Sitio institucional estático de AIUTO (es-MX): 9 pantallas, sin frameworks ni dependencias de build. HTML semántico, CSS con design tokens centralizados y JavaScript vanilla. Listo para desplegarse en cualquier hosting estático bajo el dominio `aiuto.com.mx`.
+Sitio institucional estático de AIUTO (es-MX): 9 pantallas, sin frameworks ni dependencias de build. HTML semántico, CSS con design tokens centralizados y JavaScript vanilla.
+
+**En línea en [aiuto.com.mx](https://aiuto.com.mx) desde el 8 de septiembre de 2026**, con contenido de muestra pendiente de sustituir — ver [`docs/CONTENIDO.md`](docs/CONTENIDO.md).
 
 ---
 
@@ -28,11 +30,15 @@ Sitio institucional estático de AIUTO (es-MX): 9 pantallas, sin frameworks ni d
 │   ├── categorias.json/.js Datos de las 7 categorías
 │   ├── robots.txt          + sitemap.xml
 │   └── assets/             Logos AIUTO
-└── docs/
-    ├── HANDOFF.md          Especificación de diseño: tokens, tipografía, rejilla, notas por pantalla
-    ├── DESPLIEGUE.md       Guía de publicación: subida, DNS, HTTPS y verificación
-    ├── tokens.json         Design tokens en formato máquina (Tailwind / Figma Tokens / CSS vars)
-    └── diseno/             Paquete de diseño original (mockup editable, prototipo offline, fuentes)
+├── docs/
+│   ├── HANDOFF.md          Especificación de diseño: tokens, tipografía, rejilla, notas por pantalla
+│   ├── DESPLIEGUE.md       Guía de publicación: subida, DNS, HTTPS y verificación
+│   ├── CONTENIDO.md        Qué falta sustituir: datos, enlaces, fotos, formulario
+│   ├── tokens.json         Design tokens en formato máquina (Tailwind / Figma Tokens / CSS vars)
+│   └── diseno/             Paquete de diseño original (mockup editable, prototipo offline, fuentes)
+└── tools/
+    ├── datos.json          Datos reales por sustituir (WhatsApp, correo, enlaces del footer)
+    └── aplicar-datos.py    Los aplica a las 9 páginas de una pasada
 ```
 
 ## Vista local
@@ -85,14 +91,22 @@ cd sitio && zip -r ../aiuto-sitio.zip .
 
 Pasos completos —subida por cPanel o FTP, registros DNS, AutoSSL y verificación con `curl`— en [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
 
-## Pendientes antes del lanzamiento
+## Contenido pendiente
 
-1. **Fotografía real** — los marcadores rayados se sustituyen por `<img>` con el mismo `clip-path`; el layout no cambia.
-2. **Contenido real** — teléfono, correo, número de WhatsApp, redes sociales, avisos legales y vacantes son de muestra.
-3. **Backend de formularios** — el envío está simulado; la validación de cliente y el honeypot ya están. Conectar a correo/CRM.
-4. **Analítica** — contenedor de analítica y verificación en Search Console.
+El sitio está publicado con datos de muestra. Para ver qué falta:
 
-Detalle completo en [`docs/HANDOFF.md`](docs/HANDOFF.md).
+```bash
+python3 tools/aplicar-datos.py --estado
+```
+
+1. **Formulario de contacto** — el envío está simulado: hoy los mensajes se pierden. Es lo más urgente.
+2. **Datos reales** — WhatsApp, correo y horario. Se sustituyen llenando `tools/datos.json` y corriendo `python3 tools/aplicar-datos.py --aplicar`.
+3. **Enlaces del footer** — blog, redes sociales y avisos legales apuntan a `#`. El aviso de privacidad es obligatorio en cuanto el formulario recoja datos personales.
+4. **Fotografía** — basta con sustituir el `<span class="mono">` por un `<img>` dentro del mismo `div.photo`; el CSS ya conserva recorte, blanco y negro y posición. Medidas de cada hueco en `docs/CONTENIDO.md` §3.
+5. **Vacantes** — las 7 de `bolsa.html` son inventadas.
+6. **Analítica** — contenedor de analítica y verificación en Search Console.
+
+Inventario completo en [`docs/CONTENIDO.md`](docs/CONTENIDO.md); especificación de diseño en [`docs/HANDOFF.md`](docs/HANDOFF.md).
 
 ---
 
