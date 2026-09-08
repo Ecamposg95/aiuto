@@ -1,0 +1,85 @@
+# AIUTO — configuración de servidor Apache (cPanel / hosting compartido)
+# Colocar en la raíz pública junto a index.html (public_html/).
+
+# ---------- Página de inicio y errores ----------
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+# Sin listado de directorios
+Options -Indexes
+
+# ---------- Codificación ----------
+AddDefaultCharset UTF-8
+<IfModule mod_mime.c>
+  AddType application/json .json
+  AddType image/svg+xml .svg
+  AddType text/plain .txt
+</IfModule>
+
+# ---------- Canónico: HTTPS y sin www ----------
+# El dominio canónico del sitio es https://aiuto.com.mx (así están los canonical,
+# el sitemap y las etiquetas Open Graph). Estas reglas evitan contenido duplicado.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # http -> https
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # www -> raíz
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# ---------- Compresión ----------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE application/xml image/svg+xml
+</IfModule>
+
+# ---------- Caché ----------
+# Imágenes y fuentes: largo. CSS/JS: un día (el sitio no usa cache-busting en
+# los nombres de archivo, así que un cambio se propaga en 24 h). HTML: siempre fresco.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/png              "access plus 1 year"
+  ExpiresByType image/jpeg             "access plus 1 year"
+  ExpiresByType image/webp             "access plus 1 year"
+  ExpiresByType image/svg+xml          "access plus 1 year"
+  ExpiresByType font/woff2             "access plus 1 year"
+  ExpiresByType text/css               "access plus 1 day"
+  ExpiresByType application/javascript "access plus 1 day"
+  ExpiresByType application/json       "access plus 1 hour"
+  ExpiresByType text/html              "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  # ---------- Cabeceras de seguridad ----------
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+  # Activar SOLO cuando el certificado HTTPS ya esté funcionando en el dominio
+  # y en todos los subdominios que uses (es difícil de revertir):
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
+# ---------- Archivos que no deben servirse ----------
+<IfModule mod_authz_core.c>
+  <FilesMatch "^(\.htaccess|\.htpasswd|\.git.*|.*\.md)$">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+  <FilesMatch "^(\.htaccess|\.htpasswd|\.git.*|.*\.md)$">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+</IfModule>

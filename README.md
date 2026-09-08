@@ -21,6 +21,8 @@ Sitio institucional estático de AIUTO (es-MX): 9 pantallas, sin frameworks ni d
 │   ├── bolsa.html          Bolsa de Trabajo con búsqueda y filtros
 │   ├── contacto.html       Formulario de contacto con validación
 │   ├── ui-kit.html         UI Kit — referencia normativa del sistema visual
+│   ├── 404.html            Página de error
+│   ├── .htaccess           Config Apache: HTTPS, www→raíz, compresión, caché
 │   ├── styles.css          Hoja única; todos los tokens en :root
 │   ├── main.js             Comportamiento: menú, formularios, filtros, categoría
 │   ├── categorias.json/.js Datos de las 7 categorías
@@ -28,6 +30,7 @@ Sitio institucional estático de AIUTO (es-MX): 9 pantallas, sin frameworks ni d
 │   └── assets/             Logos AIUTO
 └── docs/
     ├── HANDOFF.md          Especificación de diseño: tokens, tipografía, rejilla, notas por pantalla
+    ├── DESPLIEGUE.md       Guía de publicación: subida, DNS, HTTPS y verificación
     ├── tokens.json         Design tokens en formato máquina (Tailwind / Figma Tokens / CSS vars)
     └── diseno/             Paquete de diseño original (mockup editable, prototipo offline, fuentes)
 ```
@@ -72,7 +75,15 @@ El morado del isotipo (`#572967`) es el único color de acción. Los siete color
 
 ## Despliegue
 
-El contenido de `sitio/` se publica tal cual en la raíz del hosting (GitHub Pages, Netlify, Vercel, S3, nginx…). El dominio canónico configurado en metadatos, `robots.txt` y `sitemap.xml` es `https://aiuto.com.mx`.
+El contenido de `sitio/` se publica tal cual en la raíz pública del hosting (`public_html/` en cPanel; también sirve en Netlify, Vercel, S3 o nginx). El dominio canónico configurado en metadatos, `robots.txt` y `sitemap.xml` es `https://aiuto.com.mx`, sin `www`.
+
+Paquete listo para subir:
+
+```bash
+cd sitio && zip -r ../aiuto-sitio.zip .
+```
+
+Pasos completos —subida por cPanel o FTP, registros DNS, AutoSSL y verificación con `curl`— en [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md).
 
 ## Pendientes antes del lanzamiento
 

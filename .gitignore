@@ -13,3 +13,6 @@ desktop.ini
 # Temporales
 *.tmp
 *.bak
+
+# Paquete de despliegue generado
+aiuto-sitio.zip
