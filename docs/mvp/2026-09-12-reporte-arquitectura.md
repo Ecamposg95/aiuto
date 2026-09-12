@@ -1,13 +1,19 @@
 # Del sitio al producto — reporte de arquitectura
 
-**Borrador para discusión · 12 de septiembre de 2026**
+**Versión 2 · 12 de septiembre de 2026**
 
 Versión navegable: https://claude.ai/code/artifact/f28c8293-debb-413c-99b2-fffb9f9efb4b
+
+> **Qué cambió en la versión 2.** Se confirmó que el hosting de Hostinger es un **Cloud
+> Startup ya contratado**, con tres sitios encima y detrás de la CDN de Hostinger con borde en
+> Phoenix. Apareció además un **VPS de IONOS en Estados Unidos**, con producción corriendo. Eso
+> reabre la pregunta del motor de base de datos y cambia por completo la sección 7.
 
 | | |
 | --- | --- |
 | Proyecto | AIUTO · aiuto.com.mx |
 | Estado hoy | Sitio estático, sin backend |
+| Infraestructura | Hostinger Cloud Startup (3 sitios) · VPS IONOS en EE. UU. (con producción) |
 | Stack decidido | TypeScript de punta a punta |
 | Equipo | Una persona |
 
@@ -120,35 +126,61 @@ fase que justifica cobrar. Necesita oferta (F2), demanda (F3) y confianza acumul
 - **La landing se queda donde está.** `aiuto.com.mx` sigue estático con su SEO intacto; la app
   vive en `app.aiuto.com.mx`. Cero riesgo para lo publicado.
 
-> **Advertencia registrada.** Con una sola persona, una API separada cuesta más de lo que rinde
-> en la fase 1; los route handlers de Next.js harían lo mismo con menos código. La decisión de
-> API separada es defendible si prevés app móvil o clientes externos, pero se paga por adelantado.
+> **La API separada depende del destino.** Son dos procesos Node corriendo todo el tiempo. En el
+> Cloud de Hostinger, con 4 GB entre tres sitios, eso no es gusto sino capacidad, y ahí conviene
+> una sola app Next.js. En IONOS o Railway la decisión vuelve a ser tuya. En los tres casos la
+> lógica de negocio vive en `packages/`, no dentro del framework que sirve HTTP, así que extraer
+> la API después es mover código, no reescribirlo.
 
-## 7. Hosting en Hostinger
+## 7. Dónde vive el MVP
 
-El VPS cuesta **menos** que el plan Cloud al renovar y hace bastante más.
+Tienes tres infraestructuras y dos ya están pagadas. La pregunta no es cuál conectar con cuál,
+sino dónde vive el conjunto completo.
 
-| | A · Cloud Startup | **B · VPS KVM 2 + Dokploy** | C · VPS KVM 2 sin PaaS |
+> **El principio que decide esto: la aplicación y su base de datos tienen que vivir en la misma
+> red.** Si Next.js corre en Phoenix y Postgres en California, cada consulta cruza el internet
+> público, y una página hace muchas. Partir la aplicación de su base entre dos proveedores es la
+> forma más común de arruinar el rendimiento sin notarlo hasta que ya está construido.
+
+De ahí el segundo principio: **cada máquina hace lo que sabe hacer.**
+
+| | Hostinger Cloud Startup | **VPS de IONOS** | Railway |
 | --- | --- | --- | --- |
-| Precio al renovar | $25.99/mes | **$14.99/mes** | $14.99/mes |
-| Recursos | 4 vCPU · 4 GB · 100 GB | 2 vCPU · 8 GB · 100 GB · 8 TB | igual que B |
-| Node persistente | Sí, oficial | Sí | Sí |
-| Docker / root | No | Sí | Sí |
-| Motor de base | Solo MariaDB | El que elijas | El que elijas |
-| `prisma migrate dev` | No corre ahí | Sí | Sí |
-| TLS y rollback | Gestionado | Dokploy (un clic) | Lo escribes tú |
+| Costo adicional | $0, ya pagado | **$0, ya pagado** | $15–25/mes según uso |
+| Root y Docker | No | **Sí** | No aplica, es PaaS |
+| Motor de base | Solo MariaDB | **El que elijas** | Postgres, MySQL, MariaDB |
+| `prisma migrate dev` | No corre ahí | **Sí** | Sí |
+| Ubicación | Borde Phoenix (verificado) | EE. UU., por medir | California, la más cercana |
+| Riesgo principal | 4 GB entre 3 sitios; el build de Next.js es el pico | Ya tiene producción encima | Factura variable; el tope duro apaga producción |
 
-**Recomendación: opción B.** 42 % más barata que Cloud al renovar, te deja elegir base de datos,
-y Dokploy entrega buena parte de la comodidad de Railway sin factura variable.
+**Recomendación: el VPS de IONOS, si tiene margen.** Ya lo pagas, tiene root y Docker, te deja
+elegir PostgreSQL y está en Estados Unidos. Esa sola decisión elimina toda la sección 8. La
+condición no es retórica: ya corre producción, así que el MVP entra en contenedores con **límites
+de memoria y CPU declarados** y en su propia red, para que no pueda ahogar lo que ya está ahí.
 
-Dos advertencias: **no hay centro de datos en México** (Phoenix ≈ 45 ms a CDMX, São Paulo ≈ 156 ms,
-elige Phoenix), y **los snapshots no son respaldos** (uno a la vez, expiran a las 24 h). Los
-respaldos diarios cuestan 6 USD/mes extra y son parte del costo real.
+**Si no tiene margen: Railway.** Entre 15 y 25 dólares al mes para este tamaño. Entiende
+monorepos de pnpm de forma nativa y ejecuta `prisma migrate deploy` como comando previo al
+despliegue. Dos cosas el día uno y no después: activar el tope de gasto y programar los
+respaldos. Su Postgres es formalmente no gestionado y la recuperación a un punto en el tiempo
+**cuenta solo desde que la activas**, nunca hacia atrás.
 
-*Pendiente de verificar:* Hostinger no publica la versión de MariaDB de sus planes Cloud.
-Consúltala con `SELECT VERSION()` antes de fijar nada.
+**El Cloud de Hostinger se queda con la landing.** Es lo que hace bien y ya lo está haciendo:
+sitio estático detrás de una CDN con borde en Phoenix, verificado hoy respondiendo 200 con
+certificado Let's Encrypt vigente hasta el 18 de noviembre. Ponerle la aplicación encima
+significa MariaDB forzada, sin Docker, sin `migrate dev`, y compilar Next.js dentro de 4 GB que
+ya comparten tres sitios.
+
+### Lo que falta medir en el IONOS (bloquea la decisión)
+
+```bash
+nproc; free -h; df -h /; docker --version; uptime
+ps -eo pmem,rss,comm --sort=-rss | head -8
+```
 
 ## 8. La decisión MariaDB
+
+*Esta sección solo aplica si el MVP termina en el Cloud de Hostinger. En IONOS o en Railway
+eliges PostgreSQL y nada de lo que sigue te alcanza.*
 
 **Prisma 7 falla contra MariaDB 10.11+.** El motor nuevo emite un casting JSON propio de MySQL 8
 que el analizador de MariaDB rechaza, rompiendo introspección y consultas. Reporte abierto desde
@@ -166,12 +198,14 @@ tipos afirma que `Json` se mapea a `JSON` sin decir que en MariaDB es un alias d
 
 | Camino | Qué implica | Veredicto |
 | --- | --- | --- |
-| **PostgreSQL** | Elimina toda la categoría de problemas. Mejor soporte de Prisma. Exige VPS | Recomendado |
+| **PostgreSQL** | Elimina toda la categoría de problemas. Mejor soporte de Prisma. Disponible en IONOS y Railway | Recomendado |
 | MySQL 8 | Mismo proveedor de Prisma, sin el fallo crítico, con `relationJoins` | Aceptable |
 | MariaDB | Fijar Prisma en 6.x, prohibir el tipo `Json`, asumir consultas extra | Con deuda |
 
-MariaDB probablemente entró a la lista porque es lo que da el hosting compartido. Al moverte a
-un VPS esa restricción desaparece.
+MariaDB entró a la lista porque es lo que da el hosting compartido, no porque la hayas elegido.
+Tienes un VPS ya pagado donde esa restricción no existe. Y si de todos modos terminas en
+Hostinger, **consulta primero la versión** con `SELECT VERSION()` desde phpMyAdmin: Hostinger no
+la publica, y es justamente lo que determina si el fallo crítico te alcanza.
 
 ## 9. Entornos y entrega
 
@@ -190,18 +224,23 @@ un VPS esa restricción desaparece.
 | --- | --- | --- |
 | Cuatro tipos de cuenta desde el inicio | Cuadruplica auth y pantallas para una base vacía | La fase 1 autentica solo al equipo |
 | Marketplace sin oferta | Resultados vacíos; la primera impresión mata la beta | Directorio antes que matching |
-| Prisma 7 sobre MariaDB | Fallo crítico abierto, sin fecha de arreglo | PostgreSQL, o fijar Prisma 6.x |
+| Prisma 7 sobre MariaDB | Fallo crítico abierto, sin fecha de arreglo | PostgreSQL en IONOS o Railway; si terminas en Hostinger, fijar Prisma 6.x |
+| App y base en proveedores distintos | Cada consulta cruza el internet público | Aplicación y base siempre en la misma red |
+| MVP encima de producción ajena en IONOS | Un pico del MVP puede tumbar lo que ya corre ahí | Contenedores con límites de memoria y CPU, en su propia red |
 | Datos personales sin aviso | LFPDPPP lo exige desde el primer registro | Publicar el aviso antes de abrir el formulario |
 | Rehacer la landing en Next.js | 9 pantallas afinadas y SEO resuelto, en riesgo sin necesidad | La landing se queda; la app en subdominio |
-| Un solo dev con un VPS | Tú eres también el administrador del servidor | Dokploy + respaldos diarios de pago |
+| Un solo dev administrando servidores | Tú eres el administrador, en tres infraestructuras | Todo el MVP en una sola, con respaldos programados desde el día uno |
 | Beta gratuita sin definición de éxito | Sin métricas no sabrás qué cobrar | Definir tres números antes de escribir código |
 
 ## 11. Preguntas abiertas
 
 Las dos primeras bloquean el inicio; las demás se responden mientras se construye la fase 1.
 
-1. **¿Postgres, MySQL o MariaDB?** La decisión más cara de revertir, y la única que condiciona el plan de hosting.
-2. **¿Ya contrataste algo en Hostinger, y qué exactamente?** Si ya hay un Cloud pagado, hay que trabajar dentro de sus límites.
+> **Ya resueltas.** Qué hay en Hostinger: un Cloud Startup con tres sitios. Qué motor de base:
+> deja de ser pregunta suelta y pasa a ser consecuencia de dónde viva el MVP.
+
+1. **¿Cuánto margen tiene el VPS de IONOS?** Núcleos, memoria libre, disco y si tiene Docker. Es lo único que separa la recomendación principal de la alternativa de pago.
+2. **¿Qué corre hoy en el IONOS y qué tan crítico es?** Si es producción de un cliente, el MVP entra con límites de recursos declarados o no entra.
 3. **¿Qué hace hoy el equipo AIUTO a mano que le duela?** El panel se diseña desde ahí. Sin esto, la fase 1 es una suposición bien formateada.
 4. **¿Cuántas personas usarían el panel interno?** Determina si los permisos son un campo de rol o un sistema completo.
 5. **¿Quién redacta el aviso de privacidad?** Responsable, datos, finalidad, transferencias y derechos ARCO. No conviene improvisarlo.
@@ -211,5 +250,6 @@ Las dos primeras bloquean el inicio; las demás se responden mientras se constru
 
 ## 12. Siguiente paso
 
-Si el corte de la fase 1 es correcto, el siguiente entregable es la especificación técnica y el
-plan de implementación tarea por tarea. Si no, reordenamos antes de escribir código.
+Corre el diagnóstico del IONOS y confirma si el corte de la fase 1 es correcto. Con esas dos
+cosas: especificación técnica y plan de implementación tarea por tarea. Si el corte no convence,
+lo reordenamos antes de escribir una línea de código.
