@@ -1,23 +1,14 @@
 # Del sitio al producto — reporte de arquitectura
 
-**Versión 2 · 12 de septiembre de 2026**
+**Versión 3 · 14 de septiembre de 2026**
 
 Versión navegable: https://claude.ai/code/artifact/f28c8293-debb-413c-99b2-fffb9f9efb4b
 
-> **Qué cambió en la versión 2.** Se confirmó que el hosting de Hostinger es un **Cloud
-> Startup ya contratado**, con tres sitios encima y detrás de la CDN de Hostinger con borde en
-> Phoenix. Apareció además un **VPS de IONOS en Estados Unidos**, con producción corriendo. Eso
-> reabre la pregunta del motor de base de datos y cambia por completo la sección 7.
-
-| | |
-| --- | --- |
-| Proyecto | AIUTO · aiuto.com.mx |
-| Estado hoy | Sitio estático, sin backend |
-| Infraestructura | Hostinger Cloud Startup (3 sitios) · VPS IONOS en EE. UU. (con producción) |
-| Stack decidido | TypeScript de punta a punta |
-| Equipo | Una persona |
-
----
+> **Qué cambió en la versión 3.** Quedó decidida la infraestructura: **Railway hospeda la beta**
+> completa, incluidos desarrollo, depuración y primeros usuarios, y **el VPS de IONOS recibe
+> producción** cuando la beta gradúe. El Cloud de Hostinger se queda solo con la landing. Con eso
+> el motor de base de datos deja de estar en duda y pasa a ser **PostgreSQL**, y aparece un
+> requisito nuevo que atraviesa todo el proyecto: **portabilidad desde el primer commit**.
 
 ## 1. Dónde estamos
 
@@ -134,53 +125,52 @@ fase que justifica cobrar. Necesita oferta (F2), demanda (F3) y confianza acumul
 
 ## 7. Dónde vive el MVP
 
-Tienes tres infraestructuras y dos ya están pagadas. La pregunta no es cuál conectar con cuál,
-sino dónde vive el conjunto completo.
+**Decidido.** Railway para la beta, IONOS para producción, Hostinger para la landing.
 
-> **El principio que decide esto: la aplicación y su base de datos tienen que vivir en la misma
-> red.** Si Next.js corre en Phoenix y Postgres en California, cada consulta cruza el internet
-> público, y una página hace muchas. Partir la aplicación de su base entre dos proveedores es la
-> forma más común de arruinar el rendimiento sin notarlo hasta que ya está construido.
-
-De ahí el segundo principio: **cada máquina hace lo que sabe hacer.**
-
-| | Hostinger Cloud Startup | **VPS de IONOS** | Railway |
+| | Hostinger Cloud Startup | VPS de IONOS | **Railway** |
 | --- | --- | --- | --- |
-| Costo adicional | $0, ya pagado | **$0, ya pagado** | $15–25/mes según uso |
-| Root y Docker | No | **Sí** | No aplica, es PaaS |
-| Motor de base | Solo MariaDB | **El que elijas** | Postgres, MySQL, MariaDB |
-| `prisma migrate dev` | No corre ahí | **Sí** | Sí |
-| Ubicación | Borde Phoenix (verificado) | EE. UU., por medir | California, la más cercana |
-| Riesgo principal | 4 GB entre 3 sitios; el build de Next.js es el pico | Ya tiene producción encima | Factura variable; el tope duro apaga producción |
+| Rol | La landing, permanente | Producción, más adelante | **La beta** |
+| Costo | $0, ya pagado | $0, ya pagado | **$15–25/mes según uso** |
+| Motor de base | Solo MariaDB | PostgreSQL | **PostgreSQL** |
+| Root y Docker | No | Sí | No aplica, es PaaS |
 
-**Recomendación: el VPS de IONOS, si tiene margen.** Ya lo pagas, tiene root y Docker, te deja
-elegir PostgreSQL y está en Estados Unidos. Esa sola decisión elimina toda la sección 8. La
-condición no es retórica: ya corre producción, así que el MVP entra en contenedores con **límites
-de memoria y CPU declarados** y en su propia red, para que no pueda ahogar lo que ya está ahí.
+> **El principio que sostiene el reparto: la aplicación y su base viven siempre en la misma red.**
+> Por eso el MVP se mueve completo de Railway a IONOS cuando toque, nunca a medias.
 
-**Si no tiene margen: Railway.** Entre 15 y 25 dólares al mes para este tamaño. Entiende
-monorepos de pnpm de forma nativa y ejecuta `prisma migrate deploy` como comando previo al
-despliegue. Dos cosas el día uno y no después: activar el tope de gasto y programar los
-respaldos. Su Postgres es formalmente no gestionado y la recuperación a un punto en el tiempo
-**cuenta solo desde que la activas**, nunca hacia atrás.
+La ruta queda en dos etapas. Railway hospeda la beta completa: desarrollo, depuración y primeros
+usuarios. Cuando la beta gradúe, el conjunto entero se muda al VPS de IONOS y la factura de
+Railway se apaga. Hostinger nunca entra a la ecuación del producto.
 
-**El Cloud de Hostinger se queda con la landing.** Es lo que hace bien y ya lo está haciendo:
-sitio estático detrás de una CDN con borde en Phoenix, verificado hoy respondiendo 200 con
-certificado Let's Encrypt vigente hasta el 18 de noviembre. Ponerle la aplicación encima
-significa MariaDB forzada, sin Docker, sin `migrate dev`, y compilar Next.js dentro de 4 GB que
-ya comparten tres sitios.
+Eso convierte una cosa en requisito de diseño desde el primer commit, no en tarea del final:
+**portabilidad**. Si la beta se construye pegada a Railway, la mudanza deja de ser un despliegue
+y se vuelve un proyecto.
 
-### Lo que falta medir en el IONOS (bloquea la decisión)
+### Portabilidad desde el primer commit
 
-```bash
-nproc; free -h; df -h /; docker --version; uptime
-ps -eo pmem,rss,comm --sort=-rss | head -8
-```
+- **Docker desde el inicio.** Un `Dockerfile` por aplicación y un `docker-compose.yml` que levante el conjunto. Railway despliega desde Dockerfile igual de bien, y ese mismo compose es después el despliegue en IONOS.
+- **La misma versión mayor de PostgreSQL en los tres lugares**, fijada explícitamente en la imagen.
+- **Nada propietario en el código.** Si el código llama a algo que solo existe en Railway, la mudanza nace con deuda.
+- **Ensayar la migración antes de necesitarla.** Un volcado restaurado en el IONOS, una vez, mientras no hay prisa.
 
-## 8. La decisión MariaDB
+> **Lo difícil de mudarse no es la aplicación.** Mover contenedores toma minutos. Lo difícil es
+> mover una base que ya tiene usuarios dentro: exige ventana de mantenimiento, congelar escrituras
+> y un plan de reversa. Por eso la portabilidad se decide ahora.
 
-*Esta sección solo aplica si el MVP termina en el Cloud de Hostinger. En IONOS o en Railway
-eliges PostgreSQL y nada de lo que sigue te alcanza.*
+### Lo que hay que dejar armado el día uno en Railway
+
+- **Región US West.** California es la más cercana a México de las cuatro que ofrece Railway. No hay región en Latinoamérica.
+- **Respaldos programados.** No vienen por defecto. Con primeros usuarios dentro, uno diario es el mínimo defendible.
+- **Recuperación a un punto en el tiempo, activada de inmediato.** Cuenta solo hacia adelante.
+- **Tope de gasto, con cuidado.** El límite duro no degrada el servicio, lo apaga entero.
+- **Red privada entre servicios.** Hablar con la base por URL pública se cobra como salida a internet.
+
+**Falta definir qué dispara la mudanza:** una cifra de usuarios, un monto de factura o el fin de
+la beta gratuita. Si no se escribe, se pospone hasta que duela.
+
+## 8. Por qué PostgreSQL
+
+*Resuelto: Railway e IONOS ofrecen los dos PostgreSQL. Esta sección queda como registro de por
+qué importaba, y de qué te habrías llevado con MariaDB.*
 
 **Prisma 7 falla contra MariaDB 10.11+.** El motor nuevo emite un casting JSON propio de MySQL 8
 que el analizador de MariaDB rechaza, rompiendo introspección y consultas. Reporte abierto desde
@@ -198,25 +188,29 @@ tipos afirma que `Json` se mapea a `JSON` sin decir que en MariaDB es un alias d
 
 | Camino | Qué implica | Veredicto |
 | --- | --- | --- |
-| **PostgreSQL** | Elimina toda la categoría de problemas. Mejor soporte de Prisma. Disponible en IONOS y Railway | Recomendado |
+| **PostgreSQL** | Elimina toda la categoría de problemas. Mejor soporte de Prisma. Disponible en Railway y IONOS | **Elegido** |
 | MySQL 8 | Mismo proveedor de Prisma, sin el fallo crítico, con `relationJoins` | Aceptable |
 | MariaDB | Fijar Prisma en 6.x, prohibir el tipo `Json`, asumir consultas extra | Con deuda |
 
-MariaDB entró a la lista porque es lo que da el hosting compartido, no porque la hayas elegido.
-Tienes un VPS ya pagado donde esa restricción no existe. Y si de todos modos terminas en
-Hostinger, **consulta primero la versión** con `SELECT VERSION()` desde phpMyAdmin: Hostinger no
-la publica, y es justamente lo que determina si el fallo crítico te alcanza.
+MariaDB entró a la lista porque es lo que da el hosting compartido, no porque alguien la
+eligiera. Al salir la beta de Hostinger, la restricción desapareció y con ella todo lo anterior.
+
+> **La regla que queda de aquí:** la misma versión mayor de PostgreSQL en local, en Railway y en
+> IONOS, fijada explícitamente en la imagen. Un cambio de versión mayor en medio de una mudanza
+> convierte un volcado y una restauración en una tarde de depuración.
 
 ## 9. Entornos y entrega
 
+- **Dos entornos, no tres: local y beta.** Local con Docker Compose, beta en Railway. Producción
+  aparece cuando exista, en IONOS. Un staging hoy sería ceremonia sin lector.
 - **GitHub Actions en cada PR:** typecheck, lint, pruebas y comparación del esquema contra la
-  base para detectar desviaciones antes de producción.
-- **Despliegue por Dokploy** escuchando el push a `main`. GitHub Actions nunca necesita
-  credenciales del servidor.
-- **Dos entornos: local y producción.** Local con Docker Compose y la misma versión de motor que
-  producción. Staging llega cuando haya alguien más además de ti.
-- **Regla dura de migraciones:** `migrate dev` solo en local, `migrate deploy` al arrancar el
-  contenedor. Nunca al revés.
+  base para detectar desviaciones antes de que lleguen a la beta.
+- **Railway despliega solo** al recibir el push a `main`, así que GitHub Actions nunca necesita
+  credenciales. Conviene activar la espera por las pruebas.
+- **Regla dura de migraciones:** `migrate dev` solo en local, `migrate deploy` como paso previo
+  al despliegue. Nunca al revés, y no cambia al mudarse a IONOS.
+- **El despliegue se define en Docker**, no en el panel de Railway. Lo que viva solo en ese panel
+  hay que reconstruirlo a mano el día de la mudanza.
 
 ## 10. Riesgos
 
@@ -224,7 +218,9 @@ la publica, y es justamente lo que determina si el fallo crítico te alcanza.
 | --- | --- | --- |
 | Cuatro tipos de cuenta desde el inicio | Cuadruplica auth y pantallas para una base vacía | La fase 1 autentica solo al equipo |
 | Marketplace sin oferta | Resultados vacíos; la primera impresión mata la beta | Directorio antes que matching |
-| Prisma 7 sobre MariaDB | Fallo crítico abierto, sin fecha de arreglo | PostgreSQL en IONOS o Railway; si terminas en Hostinger, fijar Prisma 6.x |
+| Mudanza de Railway a IONOS | Mover contenedores es fácil; mover una base con usuarios dentro no | Docker desde el primer commit y un ensayo de la migración antes de necesitarla |
+| El tope de gasto duro de Railway | No degrada el servicio, lo apaga entero, con usuarios encima | Aviso suave bajo y límite duro con holgura real |
+| Respaldos que no existen | Railway no programa ninguno por defecto | Respaldo diario y recuperación a un punto en el tiempo, el día uno |
 | App y base en proveedores distintos | Cada consulta cruza el internet público | Aplicación y base siempre en la misma red |
 | MVP encima de producción ajena en IONOS | Un pico del MVP puede tumbar lo que ya corre ahí | Contenedores con límites de memoria y CPU, en su propia red |
 | Datos personales sin aviso | LFPDPPP lo exige desde el primer registro | Publicar el aviso antes de abrir el formulario |
@@ -236,11 +232,12 @@ la publica, y es justamente lo que determina si el fallo crítico te alcanza.
 
 Las dos primeras bloquean el inicio; las demás se responden mientras se construye la fase 1.
 
-> **Ya resueltas.** Qué hay en Hostinger: un Cloud Startup con tres sitios. Qué motor de base:
-> deja de ser pregunta suelta y pasa a ser consecuencia de dónde viva el MVP.
+> **Ya resueltas.** Dónde vive el MVP: Railway para la beta, IONOS para producción, Hostinger
+> solo para la landing. Qué motor de base: PostgreSQL, en los tres entornos. Qué hay contratado
+> en Hostinger: un Cloud Startup con tres sitios encima.
 
-1. **¿Cuánto margen tiene el VPS de IONOS?** Núcleos, memoria libre, disco y si tiene Docker. Es lo único que separa la recomendación principal de la alternativa de pago.
-2. **¿Qué corre hoy en el IONOS y qué tan crítico es?** Si es producción de un cliente, el MVP entra con límites de recursos declarados o no entra.
+1. **¿Qué dispara la mudanza de Railway a IONOS?** Una cifra de usuarios, un monto de factura, o el fin de la beta gratuita. Escribirlo ahora evita que se posponga hasta que duela.
+2. **¿Qué corre hoy en el IONOS y cuánto margen deja?** No bloquea la beta, pero sí la mudanza: `nproc; free -h; df -h /; docker --version`.
 3. **¿Qué hace hoy el equipo AIUTO a mano que le duela?** El panel se diseña desde ahí. Sin esto, la fase 1 es una suposición bien formateada.
 4. **¿Cuántas personas usarían el panel interno?** Determina si los permisos son un campo de rol o un sistema completo.
 5. **¿Quién redacta el aviso de privacidad?** Responsable, datos, finalidad, transferencias y derechos ARCO. No conviene improvisarlo.
@@ -250,6 +247,6 @@ Las dos primeras bloquean el inicio; las demás se responden mientras se constru
 
 ## 12. Siguiente paso
 
-Corre el diagnóstico del IONOS y confirma si el corte de la fase 1 es correcto. Con esas dos
-cosas: especificación técnica y plan de implementación tarea por tarea. Si el corte no convence,
-lo reordenamos antes de escribir una línea de código.
+Confirma si el corte de la fase 1 es correcto. Con eso: especificación técnica y plan de
+implementación tarea por tarea. Si el corte no convence, lo reordenamos antes de escribir una
+línea de código.
