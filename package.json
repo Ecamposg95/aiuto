@@ -19,7 +19,8 @@
     "db:seed": "pnpm --filter @aiuto/db run seed",
     "db:studio": "pnpm --filter @aiuto/db run studio",
     "db:seed:dev": "pnpm --filter @aiuto/db run seed:dev",
-    "crear-staff": "pnpm --filter @aiuto/db run crear-staff"
+    "crear-staff": "pnpm --filter @aiuto/db run crear-staff",
+    "db:seed:qa": "pnpm --filter @aiuto/db run seed:qa"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

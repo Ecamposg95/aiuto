@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit",
     "migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
     "seed:dev": "dotenv -e ../../.env -- tsx prisma/seed-dev.ts",
-    "crear-staff": "dotenv -e ../../.env -- tsx scripts/crear-staff.ts"
+    "crear-staff": "dotenv -e ../../.env -- tsx scripts/crear-staff.ts",
+    "seed:qa": "dotenv -e ../../.env -- tsx prisma/seed-qa.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.3.0",
