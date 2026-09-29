@@ -103,6 +103,10 @@ model User {
   emailVerified DateTime?
   imagen        String?
   rol           Rol       @default(CANDIDATO)
+
+  // Sólo lo tienen las cuentas del equipo, creadas a mano con tools/crear-staff.
+  // Los candidatos entrarán con Google o liga por correo en la Entrega 2.
+  passwordHash  String?
   creadoEn      DateTime  @default(now())
   actualizadoEn DateTime  @updatedAt
 
