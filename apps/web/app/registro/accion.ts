@@ -5,21 +5,34 @@ import { prisma } from '@aiuto/db'
 import { signIn } from '@/auth'
 import { esquemaRegistro } from '@/lib/esquemas'
 
-export type EstadoRegistro = { error?: string; fallas?: { campo: string; mensaje: string }[] }
+export type EstadoRegistro = {
+  error?: string
+  fallas?: { campo: string; mensaje: string }[]
+  /**
+   * Nombre y correo para repintarlos al rechazar. La contraseña NO se devuelve
+   * nunca: no tiene por qué viajar de vuelta ni quedar en el HTML.
+   */
+  valores?: { nombre: string; correo: string }
+}
 
 export async function registrar(
   _previo: EstadoRegistro,
   datos: FormData,
 ): Promise<EstadoRegistro> {
+  const valores = {
+    nombre: String(datos.get('nombre') ?? ''),
+    correo: String(datos.get('correo') ?? ''),
+  }
+
   const leido = esquemaRegistro.safeParse({
-    nombre: datos.get('nombre'),
-    correo: datos.get('correo'),
+    ...valores,
     password: datos.get('password'),
     sitioWeb: datos.get('sitioWeb'),
   })
 
   if (!leido.success) {
     return {
+      valores,
       fallas: leido.error.issues.map((i) => ({
         campo: String(i.path[0] ?? ''),
         mensaje: i.message,
@@ -28,11 +41,11 @@ export async function registrar(
   }
 
   const { nombre, correo, password, sitioWeb } = leido.data
-  if (sitioWeb) return { error: 'No pudimos crear la cuenta.' }
+  if (sitioWeb) return { valores, error: 'No pudimos crear la cuenta.' }
 
   const existente = await prisma.user.findUnique({ where: { email: correo } })
   if (existente) {
-    return { fallas: [{ campo: 'correo', mensaje: 'Ya hay una cuenta con ese correo.' }] }
+    return { valores, fallas: [{ campo: 'correo', mensaje: 'Ya hay una cuenta con ese correo.' }] }
   }
 
   const passwordHash = await bcrypt.hash(password, 12)

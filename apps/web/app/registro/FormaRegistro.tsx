@@ -11,7 +11,13 @@ export function FormaRegistro() {
 
   return (
     <form action={accion} className="mt-6 border-rule border-ink p-5">
-      <Campo etiqueta="Nombre" nombre="nombre" falla={falla('nombre')} autoComplete="name" />
+      <Campo
+        etiqueta="Nombre"
+        nombre="nombre"
+        falla={falla('nombre')}
+        autoComplete="name"
+        valor={estado.valores?.nombre ?? ''}
+      />
       <Campo
         etiqueta="Correo"
         nombre="correo"
@@ -19,6 +25,7 @@ export function FormaRegistro() {
         falla={falla('correo')}
         autoComplete="email"
         ayuda="Si ya te postulaste con este correo, vas a encontrar tu historial."
+        valor={estado.valores?.correo ?? ''}
       />
       <Campo
         etiqueta="Contraseña"
@@ -56,6 +63,7 @@ function Campo({
   falla,
   ayuda,
   autoComplete,
+  valor,
 }: {
   etiqueta: string
   nombre: string
@@ -63,6 +71,7 @@ function Campo({
   falla?: string
   ayuda?: string
   autoComplete?: string
+  valor?: string
 }) {
   return (
     <label className="mt-4 block first:mt-0">
@@ -71,6 +80,7 @@ function Campo({
         type={tipo}
         name={nombre}
         required
+        defaultValue={valor}
         autoComplete={autoComplete}
         aria-invalid={falla ? true : undefined}
         className={`campo mt-2 ${falla ? 'campo-error' : ''}`}
