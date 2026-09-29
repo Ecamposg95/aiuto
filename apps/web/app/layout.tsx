@@ -37,6 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/asesoria" className="text-ink hover:text-purple">
                 Asesoría
               </Link>
+              <Link href="/contacto" className="text-ink hover:text-purple">
+                Contacto
+              </Link>
               <a href={SITIO} className="hidden text-neutral hover:text-purple sm:inline">
                 Sitio AIUTO
               </a>

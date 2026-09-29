@@ -38,7 +38,7 @@ export default async function PanelAsesorias() {
                 {s.telefono ? ` · ${s.telefono}` : ''}
               </p>
               <p className="mt-2 text-h4">
-                {NIVEL[s.nivel]} · ${s.precioMostrado.toLocaleString('es-MX')} {s.moneda}
+                {`${NIVEL[s.nivel]} · $${s.precioMostrado.toLocaleString('es-MX')} ${s.moneda}`}
               </p>
               {s.mensaje && (
                 <p className="mt-3 border-l-rule border-line pl-4 text-sm text-ink-2">{s.mensaje}</p>

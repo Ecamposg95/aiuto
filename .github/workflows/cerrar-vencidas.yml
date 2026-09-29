@@ -1,0 +1,32 @@
+name: Cerrar vacantes vencidas
+
+# Ninguna vacante vive mas de 60 dias. Esta tarea las cierra y avisa a quienes
+# postularon.
+#
+# Vive aqui y no en un servicio de Railway porque el cron de Railway reemplaza
+# el comando de arranque del servicio: ponerlo en el web lo dejaria de servir, y
+# un servicio aparte seria pagar una imagen entera para hacer un curl.
+#
+# La ruta es idempotente: correrla de mas no hace dano.
+on:
+  schedule:
+    # Todos los dias a las 09:00 UTC (03:00 en el centro de Mexico).
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  cerrar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar la tarea
+        run: |
+          respuesta=$(curl -sS -w '\n%{http_code}' -X POST \
+            -H "authorization: Bearer ${{ secrets.TAREAS_SECRET }}" \
+            "${{ vars.APP_URL }}/api/tareas/cerrar-vencidas")
+          cuerpo=$(echo "$respuesta" | head -n -1)
+          codigo=$(echo "$respuesta" | tail -n 1)
+          echo "$cuerpo"
+          if [ "$codigo" != "200" ]; then
+            echo "La tarea respondio $codigo"
+            exit 1
+          fi

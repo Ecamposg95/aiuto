@@ -62,7 +62,7 @@ export default function Home() {
             <li key={nivel} className="border-rule border-ink p-5">
               <p className="label">{etiqueta}</p>
               <p className="mt-3 text-metric">
-                ${precio.toLocaleString('es-MX')}
+                {`$${precio.toLocaleString('es-MX')}`}
                 <span className="ml-2 text-sm font-normal text-neutral">MXN</span>
               </p>
             </li>

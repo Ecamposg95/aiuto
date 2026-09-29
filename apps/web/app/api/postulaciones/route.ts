@@ -1,6 +1,6 @@
 import { Prisma, prisma } from '@aiuto/db'
 import { esquemaPostulacion } from '@/lib/esquemas'
-import { VACANTE_PUBLICA } from '@/lib/consultas'
+import { vacantePublica } from '@/lib/consultas'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +28,7 @@ export async function POST(peticion: Request) {
   if (datos.sitioWeb) return Response.json({ ok: true }, { status: 201 })
 
   const vacante = await prisma.vacante.findFirst({
-    where: { slug: datos.vacanteSlug, ...VACANTE_PUBLICA },
+    where: { slug: datos.vacanteSlug, ...vacantePublica() },
     select: { id: true, puesto: true },
   })
   if (!vacante) {

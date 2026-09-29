@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # El cliente de Prisma no esta versionado: hay que generarlo antes de
+      # comprobar tipos, o nada resuelve.
+      - run: pnpm --filter @aiuto/db generate
+
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
+      - run: pnpm --filter @aiuto/web build
+        env:
+          # El build no consulta la base, pero Prisma exige la variable presente.
+          DATABASE_URL: postgresql://nadie:nadie@localhost:5432/nadie
