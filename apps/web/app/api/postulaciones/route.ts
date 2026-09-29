@@ -1,4 +1,5 @@
 import { Prisma, prisma } from '@aiuto/db'
+import { auth } from '@/auth'
 import { esquemaPostulacion } from '@/lib/esquemas'
 import { vacantePublica } from '@/lib/consultas'
 
@@ -35,10 +36,21 @@ export async function POST(peticion: Request) {
     return Response.json({ error: 'Esa vacante ya no está abierta.' }, { status: 404 })
   }
 
+  // Si hay sesion, la postulacion queda ligada al perfil y aparece en /mi sin
+  // depender del correo que se haya escrito en el formulario.
+  const sesion = await auth()
+  const perfil = sesion?.user?.id
+    ? await prisma.candidateProfile.findUnique({
+        where: { userId: sesion.user.id },
+        select: { id: true },
+      })
+    : null
+
   try {
     const postulacion = await prisma.postulacion.create({
       data: {
         vacanteId: vacante.id,
+        candidateProfileId: perfil?.id ?? null,
         nombre: datos.nombre,
         correo: datos.correo,
         telefono: datos.telefono || null,

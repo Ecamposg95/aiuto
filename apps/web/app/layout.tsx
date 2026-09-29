@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Archivo } from 'next/font/google'
 import Link from 'next/link'
+import { auth, esStaff } from '@/auth'
 import './globals.css'
 
 const archivo = Archivo({
@@ -21,7 +22,8 @@ export const metadata: Metadata = {
 
 const SITIO = 'https://aiuto.com.mx'
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const sesion = await auth()
   return (
     <html lang="es-MX" className={archivo.variable}>
       <body className="flex min-h-screen flex-col">
@@ -40,7 +42,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/contacto" className="text-ink hover:text-purple">
                 Contacto
               </Link>
-              <a href={SITIO} className="hidden text-neutral hover:text-purple sm:inline">
+              {sesion?.user ? (
+                <Link
+                  href={esStaff(sesion.user.rol) ? '/panel' : '/mi'}
+                  className="text-purple hover:text-purple-700"
+                >
+                  {esStaff(sesion.user.rol) ? 'Panel' : 'Mi cuenta'}
+                </Link>
+              ) : (
+                <Link href="/entrar" className="text-purple hover:text-purple-700">
+                  Entrar
+                </Link>
+              )}
+              <a href={SITIO} className="hidden text-neutral hover:text-purple lg:inline">
                 Sitio AIUTO
               </a>
             </nav>

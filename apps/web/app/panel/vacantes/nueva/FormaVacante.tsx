@@ -12,8 +12,20 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
   const fallas = resultado.ok ? [] : resultado.fallas
   const falla = (campo: string) => fallas.find((f) => f.campo === campo)?.mensaje
 
+  /** Lo capturado vuelve a pintarse cuando la validacion rechaza. */
+  const valor = (campo: string) => (resultado.ok ? '' : (resultado.valores[campo] ?? ''))
+
+  /**
+   * Remonta el formulario cuando cambia lo devuelto. Hace falta por los <select>:
+   * los campos de texto conservan su valor en el DOM por si solos, pero un select
+   * no vuelve a aplicar `defaultValue` en un re-render, y la categoria elegida se
+   * perdia al rechazar. Con el remontaje todos los campos se repintan desde
+   * `valores`, y eso cubre igual el camino sin JavaScript.
+   */
+  const llave = resultado.ok ? 'limpio' : JSON.stringify(resultado.valores)
+
   return (
-    <form action={accion} className="max-w-[70ch]">
+    <form action={accion} key={llave} className="max-w-[70ch]">
       {fallas.length > 0 && (
         <p role="alert" className="border-rule border-operaciones bg-operaciones-tint p-4 text-sm">
           Faltan {fallas.length} {fallas.length === 1 ? 'dato' : 'datos'}. Están marcados abajo.
@@ -21,8 +33,8 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
       )}
 
       <Bloque titulo="Quién y qué">
-        <Campo etiqueta="Empresa" nombre="empresa" falla={falla('empresa')} requerido />
-        <Selector etiqueta="Categoría" nombre="categoryId" falla={falla('categoryId')}>
+        <Campo etiqueta="Empresa" nombre="empresa" falla={falla('empresa')} requerido  valor={valor('empresa')}/>
+        <Selector etiqueta="Categoría" nombre="categoryId" falla={falla('categoryId')} valor={valor('categoryId')}>
           <option value="">Elige una…</option>
           {categorias.map((c) => (
             <option key={c.id} value={c.id}>
@@ -30,14 +42,14 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
             </option>
           ))}
         </Selector>
-        <Campo etiqueta="Puesto" nombre="puesto" falla={falla('puesto')} requerido />
-        <Campo etiqueta="Ubicación" nombre="ubicacion" falla={falla('ubicacion')} requerido />
-        <Selector etiqueta="Modalidad" nombre="modalidad" falla={falla('modalidad')}>
+        <Campo etiqueta="Puesto" nombre="puesto" falla={falla('puesto')} requerido  valor={valor('puesto')}/>
+        <Campo etiqueta="Ubicación" nombre="ubicacion" falla={falla('ubicacion')} requerido  valor={valor('ubicacion')}/>
+        <Selector etiqueta="Modalidad" nombre="modalidad" falla={falla('modalidad')} valor={valor('modalidad')}>
           <option value="PRESENCIAL">Presencial</option>
           <option value="HIBRIDO">Híbrido</option>
           <option value="REMOTO">Remoto</option>
         </Selector>
-        <Area etiqueta="Descripción del puesto" nombre="descripcion" falla={falla('descripcion')} />
+        <Area etiqueta="Descripción del puesto" nombre="descripcion" falla={falla('descripcion')}  valor={valor('descripcion')}/>
       </Bloque>
 
       <Bloque
@@ -45,7 +57,7 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
         nota="Esto es lo que diferencia a AIUTO. Sin estos datos la vacante no se guarda."
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Sueldo mínimo" nombre="sueldoMin" tipo="number" falla={falla('sueldoMin')} requerido />
+          <Campo etiqueta="Sueldo mínimo" nombre="sueldoMin" tipo="number" falla={falla('sueldoMin')} requerido  valor={valor('sueldoMin')}/>
           <Campo
             etiqueta="Sueldo máximo"
             nombre="sueldoMax"
@@ -53,9 +65,9 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
             falla={falla('sueldoMax')}
             requerido
             ayuda="Si el sueldo es fijo, repite el mínimo."
-          />
+           valor={valor('sueldoMax')}/>
         </div>
-        <Selector etiqueta="Periodicidad" nombre="periodicidad" falla={falla('periodicidad')}>
+        <Selector etiqueta="Periodicidad" nombre="periodicidad" falla={falla('periodicidad')} valor={valor('periodicidad')}>
           <option value="MENSUAL">Mensual</option>
           <option value="QUINCENAL">Quincenal</option>
           <option value="SEMANAL">Semanal</option>
@@ -64,7 +76,7 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
         </Selector>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Selector etiqueta="Seguro social" nombre="seguroSocial" falla={falla('seguroSocial')}>
+          <Selector etiqueta="Seguro social" nombre="seguroSocial" falla={falla('seguroSocial')} valor={valor('seguroSocial')}>
             <option value="COMPLETO">Sobre el sueldo completo</option>
             <option value="MIXTO">Sobre una parte</option>
           </Selector>
@@ -74,18 +86,18 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
             tipo="number"
             falla={falla('seguroSocialPct')}
             ayuda="Entre 1 y 99. Se ignora si elegiste completo."
-          />
+           valor={valor('seguroSocialPct')}/>
         </div>
 
-        <Area etiqueta="Prestaciones" nombre="prestaciones" falla={falla('prestaciones')} filas={3} />
-        <Campo etiqueta="Horario" nombre="horario" falla={falla('horario')} requerido />
+        <Area etiqueta="Prestaciones" nombre="prestaciones" falla={falla('prestaciones')} filas={3}  valor={valor('prestaciones')}/>
+        <Campo etiqueta="Horario" nombre="horario" falla={falla('horario')} requerido  valor={valor('horario')}/>
         <Campo
           etiqueta="Conocimientos requeridos"
           nombre="conocimientos"
           falla={falla('conocimientos')}
           ayuda="Separados por coma."
           requerido
-        />
+         valor={valor('conocimientos')}/>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo
@@ -94,7 +106,7 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
             tipo="number"
             falla={falla('numEntrevistas')}
             requerido
-          />
+           valor={valor('numEntrevistas')}/>
           <Campo
             etiqueta="Días esperados de cierre"
             nombre="diasCierreEsperado"
@@ -102,7 +114,7 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
             falla={falla('diasCierreEsperado')}
             ayuda="Máximo 60: es lo que vive una vacante."
             requerido
-          />
+           valor={valor('diasCierreEsperado')}/>
         </div>
       </Bloque>
 
@@ -173,6 +185,7 @@ function Campo({
   falla,
   ayuda,
   requerido,
+  valor,
 }: {
   etiqueta: string
   nombre: string
@@ -180,6 +193,7 @@ function Campo({
   falla?: string
   ayuda?: string
   requerido?: boolean
+  valor?: string
 }) {
   return (
     <Etiqueta etiqueta={etiqueta} falla={falla} ayuda={ayuda} nombre={nombre}>
@@ -187,6 +201,7 @@ function Campo({
         type={tipo}
         name={nombre}
         required={requerido}
+        defaultValue={valor}
         aria-invalid={falla ? true : undefined}
         aria-describedby={falla ? `${nombre}-error` : undefined}
         className={`campo mt-2 ${falla ? 'campo-error' : ''}`}
@@ -200,17 +215,20 @@ function Area({
   nombre,
   falla,
   filas = 5,
+  valor,
 }: {
   etiqueta: string
   nombre: string
   falla?: string
   filas?: number
+  valor?: string
 }) {
   return (
     <Etiqueta etiqueta={etiqueta} falla={falla} nombre={nombre}>
       <textarea
         name={nombre}
         rows={filas}
+        defaultValue={valor}
         aria-invalid={falla ? true : undefined}
         className={`campo mt-2 ${falla ? 'campo-error' : ''}`}
       />
@@ -223,15 +241,21 @@ function Selector({
   nombre,
   falla,
   children,
+  valor,
 }: {
   etiqueta: string
   nombre: string
   falla?: string
   children: React.ReactNode
+  valor?: string
 }) {
   return (
     <Etiqueta etiqueta={etiqueta} falla={falla} nombre={nombre}>
-      <select name={nombre} className={`campo mt-2 ${falla ? 'campo-error' : ''}`}>
+      <select
+        name={nombre}
+        defaultValue={valor || undefined}
+        className={`campo mt-2 ${falla ? 'campo-error' : ''}`}
+      >
         {children}
       </select>
     </Etiqueta>

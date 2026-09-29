@@ -37,8 +37,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const coincide = await bcrypt.compare(password, hash)
 
         if (!usuario || !usuario.passwordHash || !coincide) return null
-        if (!ROLES_STAFF.includes(usuario.rol)) return null
 
+        // Entran los tres roles. Quien puede ver que, lo decide cada zona:
+        // /panel exige staff, /mi exige sesion a secas.
         return { id: usuario.id, email: usuario.email, name: usuario.nombre, rol: usuario.rol }
       },
     }),
@@ -66,5 +67,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 /** ¿Esta sesión pertenece al equipo? */
 export function esStaff(rol: string | undefined): boolean {
-  return rol === 'STAFF_ADMIN' || rol === 'STAFF_OPERADOR'
+  return ROLES_STAFF.includes(rol as Rol)
+}
+
+/** A dónde mandar a alguien después de entrar, según quién sea. */
+export function inicioSegunRol(rol: string | undefined): string {
+  return esStaff(rol) ? '/panel' : '/mi'
 }

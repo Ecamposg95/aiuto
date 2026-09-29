@@ -272,19 +272,13 @@ async function sembrar() {
   const passwordHash = await bcrypt.hash(PASSWORD_QA, 10)
 
   // --- usuarios ---
+  // Todos llevan contraseña, incluidos los candidatos: ya pueden entrar a /mi.
   for (const u of USUARIOS) {
-    const esStaff = u.rol !== 'CANDIDATO'
+    const datos = { nombre: u.nombre, rol: u.rol, passwordHash }
     await prisma.user.upsert({
       where: { email: u.correo },
-      create: {
-        email: u.correo,
-        nombre: u.nombre,
-        rol: u.rol,
-        emailVerified: new Date(),
-        // Los candidatos todavía no tienen acceso: la contraseña llega en la Entrega 2.
-        passwordHash: esStaff ? passwordHash : null,
-      },
-      update: { nombre: u.nombre, rol: u.rol, passwordHash: esStaff ? passwordHash : null },
+      create: { email: u.correo, emailVerified: new Date(), ...datos },
+      update: datos,
     })
   }
 
@@ -438,9 +432,9 @@ async function sembrar() {
     console.log(`    ${u.correo.padEnd(28)} ${PASSWORD_QA}   (${u.rol})`)
   }
   console.log('')
-  console.log('  Candidatos (todavía sin acceso; llega en la Entrega 2):')
+  console.log('  Candidatos (entran en /entrar y caen en /mi):')
   for (const u of USUARIOS.filter((x) => x.rol === 'CANDIDATO')) {
-    console.log(`    ${u.correo.padEnd(28)} ${u.nombre}`)
+    console.log(`    ${u.correo.padEnd(28)} ${PASSWORD_QA}   ${u.nombre}`)
   }
   console.log('')
   console.log('  NO son datos reales. Antes de abrir la beta: pnpm db:seed:qa --limpiar')

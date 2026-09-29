@@ -25,6 +25,30 @@ const telefono = z
   .optional()
   .or(z.literal(''))
 
+export const esquemaRegistro = z.object({
+  nombre,
+  correo,
+  // Ocho es el mínimo que sirve de algo; pedir símbolos y mayúsculas produce
+  // contraseñas peores, no mejores, porque la gente las apunta en un papel.
+  password: z.string().min(8, 'La contraseña necesita al menos 8 caracteres.').max(200),
+  sitioWeb: z.string().optional(),
+})
+
+export const esquemaPerfil = z.object({
+  titular: z.string().trim().max(120).optional().or(z.literal('')),
+  resumen: z.string().trim().max(1500).optional().or(z.literal('')),
+  nivel: z.enum(['ESTUDIANTE', 'EXPERIMENTADO', 'GERENCIA']),
+  anosExperiencia: z.coerce.number().int().min(0).max(60),
+  telefono,
+  // Código postal, no domicilio: alcanza para calcular distancia a una vacante
+  // sin custodiar dónde vive la gente.
+  codigoPostal: z.string().trim().regex(/^\d{5}$|^$/, 'El código postal son 5 dígitos.').optional().or(z.literal('')),
+  habilidades: z.string().trim().max(500).optional().or(z.literal('')),
+  ligaPortafolio: z.string().trim().url('Esa liga no se ve bien.').max(300).optional().or(z.literal('')),
+  ligaVideo: z.string().trim().url('Esa liga no se ve bien.').max(300).optional().or(z.literal('')),
+  disponibilidad: z.string().trim().max(200).optional().or(z.literal('')),
+})
+
 export const esquemaPostulacion = z.object({
   vacanteSlug: z.string().trim().min(1).max(200),
   nombre,
@@ -58,6 +82,8 @@ export const esquemaSolicitud = z.object({
   sitioWeb: z.string().optional(),
 })
 
+export type DatosRegistro = z.infer<typeof esquemaRegistro>
+export type DatosPerfil = z.infer<typeof esquemaPerfil>
 export type DatosPostulacion = z.infer<typeof esquemaPostulacion>
 export type DatosAsesoria = z.infer<typeof esquemaAsesoria>
 export type DatosSolicitud = z.infer<typeof esquemaSolicitud>

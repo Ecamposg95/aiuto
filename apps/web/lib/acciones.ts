@@ -38,13 +38,24 @@ async function bitacora(
   await prisma.auditLog.create({ data: { actorId, entidad, entidadId, accion, datos } })
 }
 
-export type ResultadoAccion = { ok: true } | { ok: false; fallas: Falla[] }
+export type ResultadoAccion =
+  | { ok: true }
+  /**
+   * `valores` es lo que se acababa de capturar. Se devuelve para repintarlo: son
+   * catorce campos, y perderlos por un error de validacion obliga a capturar la
+   * vacante entera otra vez.
+   */
+  | { ok: false; fallas: Falla[]; valores: Record<string, string> }
 
 const texto = (d: FormData, k: string) => String(d.get(k) ?? '').trim()
 const entero = (d: FormData, k: string) => Number.parseInt(String(d.get(k) ?? ''), 10)
 
 export async function crearVacante(_previo: unknown, datos: FormData): Promise<ResultadoAccion> {
   const usuario = await exigirStaff()
+
+  const crudo = Object.fromEntries(
+    [...datos.entries()].map(([k, v]) => [k, String(v)]),
+  ) as Record<string, string>
 
   const nombreEmpresa = texto(datos, 'empresa')
   const categoryId = texto(datos, 'categoryId')
@@ -76,7 +87,7 @@ export async function crearVacante(_previo: unknown, datos: FormData): Promise<R
 
   const revisado = validarVacante(vacante)
   if (!revisado.ok) fallas.push(...revisado.fallas)
-  if (fallas.length > 0) return { ok: false, fallas }
+  if (fallas.length > 0) return { ok: false, fallas, valores: crudo }
 
   // La empresa se da de alta sola al capturar su primera vacante. En la Fase 1 no
   // se autoservicia ni tiene cuenta, así que un CRUD aparte sería una pantalla
