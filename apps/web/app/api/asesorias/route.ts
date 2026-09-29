@@ -1,6 +1,7 @@
 import { prisma } from '@aiuto/db'
 import { precioAsesoria, MONEDA_ASESORIA } from '@aiuto/core'
 import { esquemaAsesoria } from '@/lib/esquemas'
+import { avisarAsesoriaNueva } from '@/lib/avisos'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,8 @@ export async function POST(peticion: Request) {
   if (datos.sitioWeb) return Response.json({ ok: true }, { status: 201 })
 
   try {
+    const precio = precioAsesoria(datos.nivel)
+
     await prisma.solicitudAsesoria.create({
       data: {
         nombre: datos.nombre,
@@ -34,12 +37,19 @@ export async function POST(peticion: Request) {
         nivel: datos.nivel,
         // El precio se congela aquí: si mañana suben las tarifas, a esta persona
         // se le sostiene lo que vio.
-        precioMostrado: precioAsesoria(datos.nivel),
+        precioMostrado: precio,
         moneda: MONEDA_ASESORIA,
       },
     })
 
-    // TODO(correo): avisar a la dirección de AIUTO, que es quien cierra la venta.
+    await avisarAsesoriaNueva({
+      nombre: datos.nombre,
+      correo: datos.correo,
+      telefono: datos.telefono,
+      nivel: datos.nivel,
+      precio,
+      moneda: MONEDA_ASESORIA,
+    })
 
     return Response.json({ ok: true }, { status: 201 })
   } catch (error) {

@@ -1,5 +1,6 @@
 import { prisma } from '@aiuto/db'
 import { cierrePorVacanteCubierta } from '@aiuto/core'
+import { avisarVacanteCerrada } from '@/lib/avisos'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,18 @@ export async function POST(peticion: Request) {
   const ahora = new Date()
   const vencidas = await prisma.vacante.findMany({
     where: { estado: 'ABIERTA', expiraEn: { lte: ahora } },
-    select: { id: true, puesto: true, postulaciones: { select: { id: true, estado: true } } },
+    select: {
+      id: true,
+      puesto: true,
+      sueldoMin: true,
+      sueldoMax: true,
+      moneda: true,
+      periodicidad: true,
+      company: { select: { nombre: true } },
+      postulaciones: {
+        select: { id: true, estado: true, nombre: true, correo: true, tokenConsulta: true },
+      },
+    },
   })
 
   if (vencidas.length === 0) {
@@ -29,10 +41,12 @@ export async function POST(peticion: Request) {
   }
 
   let postulacionesCerradas = 0
+  let avisos = 0
 
   for (const v of vencidas) {
     const { aCerrar } = cierrePorVacanteCubierta(v.postulaciones)
     postulacionesCerradas += aCerrar.length
+    const porCerrar = v.postulaciones.filter((p) => aCerrar.includes(p.id))
 
     await prisma.$transaction([
       prisma.vacante.update({
@@ -52,12 +66,13 @@ export async function POST(peticion: Request) {
         },
       }),
     ])
+
+    const r = await avisarVacanteCerrada({ vacante: v, destinatarios: porCerrar })
+    avisos += r.enviados
   }
 
-  // TODO(correo): avisar en lote a quienes se quedaron sin respuesta.
-
   console.log(
-    `Cierre automático: ${vencidas.length} vacantes, ${postulacionesCerradas} postulaciones.`,
+    `Cierre automático: ${vencidas.length} vacantes, ${postulacionesCerradas} postulaciones, ${avisos} avisos enviados.`,
   )
-  return Response.json({ ok: true, cerradas: vencidas.length, postulacionesCerradas })
+  return Response.json({ ok: true, cerradas: vencidas.length, postulacionesCerradas, avisos })
 }

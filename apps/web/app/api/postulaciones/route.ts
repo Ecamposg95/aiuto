@@ -2,6 +2,7 @@ import { Prisma, prisma } from '@aiuto/db'
 import { auth } from '@/auth'
 import { esquemaPostulacion } from '@/lib/esquemas'
 import { vacantePublica } from '@/lib/consultas'
+import { avisarPostulacionNueva } from '@/lib/avisos'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,15 @@ export async function POST(peticion: Request) {
 
   const vacante = await prisma.vacante.findFirst({
     where: { slug: datos.vacanteSlug, ...vacantePublica() },
-    select: { id: true, puesto: true },
+    select: {
+      id: true,
+      puesto: true,
+      sueldoMin: true,
+      sueldoMax: true,
+      moneda: true,
+      periodicidad: true,
+      company: { select: { nombre: true } },
+    },
   })
   if (!vacante) {
     return Response.json({ error: 'Esa vacante ya no está abierta.' }, { status: 404 })
@@ -59,8 +68,15 @@ export async function POST(peticion: Request) {
       select: { tokenConsulta: true },
     })
 
-    // TODO(correo): acuse al candidato con la liga de seguimiento y aviso al equipo.
-    // Pendiente 4 de la spec: falta definir el proveedor de correo transaccional.
+    // Se avisa despues de guardar, y sin poder tumbar la respuesta: perder un
+    // correo es malo, perder la postulacion porque el correo fallo seria peor.
+    await avisarPostulacionNueva({
+      nombre: datos.nombre,
+      correo: datos.correo,
+      telefono: datos.telefono,
+      token: postulacion.tokenConsulta,
+      vacante,
+    })
 
     return Response.json({ ok: true, token: postulacion.tokenConsulta }, { status: 201 })
   } catch (error) {

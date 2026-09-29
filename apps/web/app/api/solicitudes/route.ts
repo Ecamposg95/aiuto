@@ -1,5 +1,6 @@
 import { prisma } from '@aiuto/db'
 import { esquemaSolicitud } from '@/lib/esquemas'
+import { avisarSolicitudNueva } from '@/lib/avisos'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,10 @@ export async function POST(peticion: Request) {
   if (datos.sitioWeb) return Response.json({ ok: true }, { status: 201 })
 
   const categoria = datos.categoriaSlug
-    ? await prisma.category.findUnique({ where: { slug: datos.categoriaSlug }, select: { id: true } })
+    ? await prisma.category.findUnique({
+        where: { slug: datos.categoriaSlug },
+        select: { id: true, nombre: true },
+      })
     : null
 
   try {
@@ -41,7 +45,14 @@ export async function POST(peticion: Request) {
       },
     })
 
-    // TODO(correo): acuse a quien escribe y aviso al equipo.
+    await avisarSolicitudNueva({
+      nombre: datos.nombre,
+      correo: datos.correo,
+      telefono: datos.telefono,
+      empresa: datos.empresa,
+      mensaje: datos.mensaje,
+      categoria: categoria?.nombre ?? null,
+    })
 
     return Response.json({ ok: true }, { status: 201 })
   } catch (error) {

@@ -13,6 +13,7 @@ import {
   type Falla,
 } from '@aiuto/core'
 import { auth, esStaff } from '@/auth'
+import { avisarCambioDeEstado, avisarVacanteCerrada } from './avisos'
 
 /**
  * Cada acción vuelve a comprobar la sesión. El layout de /panel ya la exige,
@@ -156,11 +157,17 @@ export async function marcarVacanteCubierta(datos: FormData) {
   const usuario = await exigirStaff()
   const id = texto(datos, 'id')
 
-  const postulaciones = await prisma.postulacion.findMany({
-    where: { vacanteId: id },
-    select: { id: true, estado: true },
+  const vacante = await prisma.vacante.findUniqueOrThrow({
+    where: { id },
+    include: {
+      company: { select: { nombre: true } },
+      postulaciones: {
+        select: { id: true, estado: true, nombre: true, correo: true, tokenConsulta: true },
+      },
+    },
   })
-  const { aCerrar } = cierrePorVacanteCubierta(postulaciones)
+  const { aCerrar } = cierrePorVacanteCubierta(vacante.postulaciones)
+  const porCerrar = vacante.postulaciones.filter((p) => aCerrar.includes(p.id))
 
   await prisma.$transaction([
     prisma.vacante.update({
@@ -173,7 +180,8 @@ export async function marcarVacanteCubierta(datos: FormData) {
     }),
   ])
 
-  // TODO(correo): avisar en lote a quienes quedaron en VACANTE_CUBIERTA.
+  // Nadie se queda esperando una respuesta que ya no va a llegar.
+  await avisarVacanteCerrada({ vacante, destinatarios: porCerrar })
 
   await bitacora(usuario.id, 'Vacante', id, 'cubierta', { postulacionesCerradas: aCerrar.length })
   revalidatePath('/panel/vacantes')
@@ -186,14 +194,24 @@ export async function cambiarEstadoPostulacion(datos: FormData) {
   const id = texto(datos, 'id')
   const nuevo = texto(datos, 'estado') as EstadoPostulacion
 
-  const postulacion = await prisma.postulacion.findUniqueOrThrow({ where: { id } })
+  const postulacion = await prisma.postulacion.findUniqueOrThrow({
+    where: { id },
+    include: { vacante: { include: { company: { select: { nombre: true } } } } },
+  })
   if (!puedeTransicionar(postulacion.estado, nuevo)) {
     throw new Error(`Transición inválida: ${postulacion.estado} → ${nuevo}`)
   }
 
   await prisma.postulacion.update({ where: { id }, data: { estado: nuevo } })
 
-  // TODO(correo): avisar al candidato. Es el motivo por el que existe el producto.
+  // Esto es el producto: mover una postulacion aqui es responderle a alguien.
+  await avisarCambioDeEstado({
+    nombre: postulacion.nombre,
+    correo: postulacion.correo,
+    estado: nuevo,
+    token: postulacion.tokenConsulta,
+    vacante: postulacion.vacante,
+  })
 
   await bitacora(usuario.id, 'Postulacion', id, `estado → ${nuevo}`, {
     anterior: postulacion.estado,
