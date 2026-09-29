@@ -1,8 +1,9 @@
-# Postgres local. La misma versión mayor que Railway y que el VPS de IONOS:
+# Postgres local. Versión 18, la misma que aprovisiona la plantilla de Railway y
+# la que correrá el VPS de IONOS:
 # un cambio de versión mayor convierte una mudanza en una tarde de depuración.
 services:
   postgres:
-    image: postgres:16.6-alpine
+    image: postgres:18-alpine
     container_name: aiuto-postgres
     restart: unless-stopped
     environment:

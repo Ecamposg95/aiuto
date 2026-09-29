@@ -2,7 +2,9 @@
   "name": "aiuto",
   "private": true,
   "packageManager": "pnpm@9.15.4",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "pnpm --filter @aiuto/web dev",
     "build": "pnpm --filter @aiuto/web build",
@@ -12,10 +14,10 @@
     "test": "pnpm -r test",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "db:migrate": "pnpm --filter @aiuto/db migrate",
-    "db:deploy": "pnpm --filter @aiuto/db deploy",
-    "db:seed": "pnpm --filter @aiuto/db seed",
-    "db:studio": "pnpm --filter @aiuto/db studio"
+    "db:migrate": "pnpm --filter @aiuto/db run migrate",
+    "db:deploy": "pnpm --filter @aiuto/db run migrate:deploy",
+    "db:seed": "pnpm --filter @aiuto/db run seed",
+    "db:studio": "pnpm --filter @aiuto/db run studio"
   },
   "devDependencies": {
     "typescript": "^5.7.3"
