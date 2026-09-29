@@ -9,7 +9,10 @@ ARG NODE_VERSION=22.13-alpine
 
 # ----------------------------------------------------------------- dependencias
 FROM node:${NODE_VERSION} AS deps
-RUN corepack enable
+# pnpm se instala directo y con version fija. corepack lo descarga verificando
+# firmas contra el registro, y la version que trae node:22.13 no reconoce las
+# llaves actuales: la construccion moria ahi.
+RUN npm install -g pnpm@9.15.4
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -21,7 +24,10 @@ RUN pnpm install --frozen-lockfile
 
 # ----------------------------------------------------------------- compilación
 FROM node:${NODE_VERSION} AS builder
-RUN corepack enable
+# pnpm se instala directo y con version fija. corepack lo descarga verificando
+# firmas contra el registro, y la version que trae node:22.13 no reconoce las
+# llaves actuales: la construccion moria ahi.
+RUN npm install -g pnpm@9.15.4
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
