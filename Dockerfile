@@ -54,7 +54,7 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S nextjs -G nodejs
 
 # La salida standalone trae el servidor y sólo las dependencias que realmente usa.
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 
 # `standalone` NO copia los estáticos: sin esto la aplicación sirve HTML sin CSS.
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
