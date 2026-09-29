@@ -17,7 +17,7 @@ desktop.ini
 # Paquete de despliegue generado
 aiuto-sitio.zip
 
-# Aplicación (monorepo)
+# App del monorepo (railway up manda estas lineas en un encabezado HTTP: solo ASCII)
 .env
 .env.local
 .env*.local
