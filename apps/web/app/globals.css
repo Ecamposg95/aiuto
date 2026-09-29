@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Categoría activa. Las vistas de detalle la reescriben. */
+    --cat: #66a2ba;
+    --cat-dark: #2f6d86;
+    --cat-tint: #eef4f7;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white text-ink font-sans text-body antialiased;
+  }
+
+  /* Radio 0 en todo. El sistema no tiene esquinas redondeadas. */
+  * {
+    @apply rounded-none;
+  }
+
+  img {
+    @apply block max-w-full;
+  }
+
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-purple;
+  }
+
+  ::selection {
+    background: #e5d9ea;
+  }
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-wrap px-5 lg:px-7;
+  }
+
+  /* Reglas de 2 px: el separador estructural del sistema. */
+  .rule {
+    @apply border-t-rule border-ink;
+  }
+
+  .label {
+    @apply text-label uppercase text-neutral;
+  }
+
+  /* Morado: el único color que invita a hacer clic. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 border-rule border-purple
+           bg-purple px-5 py-3 text-h4 text-white transition
+           hover:border-purple-700 hover:bg-purple-700
+           disabled:cursor-not-allowed disabled:border-disabled disabled:bg-disabled;
+  }
+
+  .btn-secundario {
+    @apply inline-flex items-center justify-center gap-2 border-rule border-ink
+           bg-white px-5 py-3 text-h4 text-ink transition hover:bg-off;
+  }
+
+  .campo {
+    @apply w-full border-px border-field bg-white px-3 py-3 text-body
+           placeholder:text-disabled focus:border-purple focus:outline-none;
+  }
+
+  .campo-error {
+    @apply border-operaciones;
+  }
+}
