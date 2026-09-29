@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../generated/client/index.js'
 
 // Una sola instancia. En desarrollo Next.js recarga el módulo en cada cambio y
 // sin esto se abren conexiones hasta agotar el pool.
@@ -12,4 +12,4 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-export * from '@prisma/client'
+export * from '../generated/client/index.js'

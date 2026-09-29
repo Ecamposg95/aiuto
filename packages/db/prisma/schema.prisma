@@ -9,6 +9,9 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Ruta propia: en la salida standalone el motor de consultas no viaja si el
+  // cliente vive en node_modules/.pnpm, que el bundler no rastrea.
+  output   = "../generated/client"
 }
 
 datasource db {

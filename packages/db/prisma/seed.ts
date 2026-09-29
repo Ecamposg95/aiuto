@@ -8,7 +8,7 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../generated/client/index.js'
 
 const prisma = new PrismaClient()
 const aqui = dirname(fileURLToPath(import.meta.url))

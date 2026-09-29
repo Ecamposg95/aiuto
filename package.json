@@ -17,7 +17,8 @@
     "db:migrate": "pnpm --filter @aiuto/db run migrate",
     "db:deploy": "pnpm --filter @aiuto/db run migrate:deploy",
     "db:seed": "pnpm --filter @aiuto/db run seed",
-    "db:studio": "pnpm --filter @aiuto/db run studio"
+    "db:studio": "pnpm --filter @aiuto/db run studio",
+    "db:seed:dev": "pnpm --filter @aiuto/db run seed:dev"
   },
   "devDependencies": {
     "typescript": "^5.7.3"
