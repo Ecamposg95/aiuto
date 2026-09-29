@@ -16,3 +16,14 @@ desktop.ini
 
 # Paquete de despliegue generado
 aiuto-sitio.zip
+
+# Aplicación (monorepo)
+.env
+.env.local
+.env*.local
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+packages/db/generated/

@@ -1,0 +1,389 @@
+// Esquema de AIUTO.
+//
+// Diseñado contemplando las cuatro fases del reporte de arquitectura; se construye
+// sólo lo de la Fase 1. Migrar datos duele, migrar pantallas no.
+//
+// Regla que sostiene el producto: los campos de transparencia de una vacante son
+// obligatorios EN LA COLUMNA, no en la validación del formulario. No se puede
+// publicar una vacante incompleta ni queriendo.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- enumeraciones
+
+enum Rol {
+  CANDIDATO
+  STAFF_ADMIN
+  STAFF_OPERADOR
+}
+
+enum NivelCandidato {
+  ESTUDIANTE // estudiante o recién egresado
+  EXPERIMENTADO
+  GERENCIA // gerencia o dirección, o quien busca ese nivel
+}
+
+enum Modalidad {
+  PRESENCIAL
+  HIBRIDO
+  REMOTO
+}
+
+enum SeguroSocial {
+  COMPLETO // se cotiza sobre el sueldo completo
+  MIXTO    // se cotiza sobre una parte; el porcentaje se declara
+}
+
+enum Periodicidad {
+  POR_HORA
+  SEMANAL
+  QUINCENAL
+  MENSUAL
+  ANUAL
+}
+
+enum EstadoVacante {
+  BORRADOR
+  ABIERTA
+  CUBIERTA
+  CERRADA
+  EXPIRADA // la cerró la tarea diaria a los 60 días
+}
+
+enum EstadoPostulacion {
+  RECIBIDA
+  EN_REVISION
+  ENTREVISTA
+  CONTRATADA
+  RECHAZADA
+  VACANTE_CUBIERTA // la vacante se cubrió con alguien más
+}
+
+enum TipoSolicitud {
+  CONTACTO  // formulario general
+  CATEGORIA // interés en una de las seis categorías de consultoría
+  EMPRESA   // una empresa que quiere publicar
+}
+
+enum EstadoSolicitud {
+  NUEVA
+  EN_PROCESO
+  ATENDIDA
+  CERRADA
+}
+
+enum EstadoAsesoria {
+  NUEVA
+  CONTACTADA
+  VENDIDA
+  EN_CURSO
+  COLOCADO
+  DESCARTADA
+}
+
+// ---------------------------------------------------------------- cuentas
+// User, Account, Session y VerificationToken siguen el contrato del adaptador
+// de Auth.js. `rol` es nuestro: con tres personas en el equipo, los permisos son
+// un campo, no un sistema.
+
+model User {
+  id            String    @id @default(cuid())
+  nombre        String?
+  email         String    @unique
+  emailVerified DateTime?
+  imagen        String?
+  rol           Rol       @default(CANDIDATO)
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+
+  cuentas   Account[]
+  sesiones  Session[]
+  perfil    CandidateProfile?
+
+  empresasCreadas    Company[]
+  vacantesCreadas    Vacante[]
+  solicitudesACargo  Solicitud[]
+  asesoriasSolicitadas SolicitudAsesoria[]
+  acciones           AuditLog[]
+
+  @@index([rol])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------- catálogo
+
+model Category {
+  id          String @id @default(cuid())
+  slug        String @unique
+  nombre      String
+  corto       String
+  descripcion String
+  color       String // base
+  colorDark   String
+  colorTint   String
+  orden       Int
+
+  vacantes    Vacante[]
+  solicitudes Solicitud[]
+  perfiles    CandidateProfile[]
+}
+
+// ---------------------------------------------------------------- candidato
+
+model CandidateProfile {
+  id       String @id @default(cuid())
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  titular         String? // "Desarrollador backend", el encabezado del perfil
+  resumen         String?
+  nivel           NivelCandidato
+  anosExperiencia Int            @default(0)
+  telefono        String?
+
+  // Código postal, no domicilio: permite calcular distancia a una vacante sin
+  // custodiar dónde vive la gente. El cálculo de rutas llega después.
+  codigoPostal String?
+
+  habilidades    String[] @default([])
+  ligaPortafolio String?
+  ligaVideo      String? // el pitch en video se aloja fuera por ahora
+  cvUrl          String?
+  disponibilidad String?
+
+  // Roster preferencial: lo otorga la asesoría de empleabilidad al validar aptitudes.
+  rosterPreferencial Boolean   @default(false)
+  validadoEn         DateTime?
+
+  categorias Category[]
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  postulaciones Postulacion[]
+
+  @@index([nivel])
+  @@index([rosterPreferencial])
+}
+
+// ---------------------------------------------------------------- empresa
+
+model Company {
+  id        String  @id @default(cuid())
+  nombre    String
+  slug      String  @unique
+  sitio     String?
+  ubicacion String?
+  logoUrl   String?
+
+  // En la Fase 1 las empresas no tienen cuenta: las da de alta el equipo AIUTO.
+  verificada  Boolean @default(false)
+  creadoPorId String?
+  creadoPor   User?   @relation(fields: [creadoPorId], references: [id], onDelete: SetNull)
+
+  creadoEn DateTime @default(now())
+
+  vacantes Vacante[]
+}
+
+// ---------------------------------------------------------------- vacante
+
+model Vacante {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  puesto      String
+  descripcion String
+  ubicacion   String
+  modalidad   Modalidad
+
+  // --- los campos que diferencian el producto: todos obligatorios ---
+
+  sueldoMin     Int // en unidades enteras de la moneda
+  sueldoMax     Int
+  moneda        String       @default("MXN")
+  periodicidad  Periodicidad
+
+  seguroSocial    SeguroSocial
+  seguroSocialPct Int // 100 cuando es COMPLETO
+
+  prestaciones String
+  horario      String
+
+  conocimientos String[]
+
+  numEntrevistas     Int // cuántas entrevistas tiene el proceso
+  diasCierreEsperado Int // en cuántos días espera cerrar la empresa
+
+  // --- fin de los campos obligatorios ---
+
+  estado      EstadoVacante @default(BORRADOR)
+  publicadaEn DateTime?
+  // Toda vacante nace con fecha de expiración. Sin vacantes vivas de más de 60 días.
+  expiraEn    DateTime?
+  cerradaEn   DateTime?
+
+  creadoPorId String?
+  creadoPor   User?   @relation(fields: [creadoPorId], references: [id], onDelete: SetNull)
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  postulaciones Postulacion[]
+
+  @@index([estado, publicadaEn])
+  @@index([categoryId])
+  @@index([expiraEn])
+}
+
+// ---------------------------------------------------------------- postulación
+
+model Postulacion {
+  id        String  @id @default(cuid())
+  vacanteId String
+  vacante   Vacante @relation(fields: [vacanteId], references: [id], onDelete: Cascade)
+
+  // En la Entrega 1 se postula sin cuenta: basta el correo. En la Entrega 2 la
+  // postulación queda ligada al perfil.
+  candidateProfileId String?
+  candidato          CandidateProfile? @relation(fields: [candidateProfileId], references: [id], onDelete: SetNull)
+
+  nombre   String
+  correo   String
+  telefono String?
+  mensaje  String?
+  cvUrl    String?
+
+  estado      EstadoPostulacion @default(RECIBIDA)
+  notaInterna String?
+
+  // Token para consultar el estado sin cuenta, desde la liga del correo.
+  tokenConsulta String @unique @default(cuid())
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  // Una postulación por persona y vacante.
+  @@unique([vacanteId, correo])
+  @@index([estado])
+  @@index([candidateProfileId])
+}
+
+// ---------------------------------------------------------------- solicitudes
+
+model Solicitud {
+  id   String        @id @default(cuid())
+  tipo TipoSolicitud
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  nombre   String
+  correo   String
+  telefono String?
+  empresa  String?
+  mensaje  String
+
+  origen String // qué página la generó
+
+  estado        EstadoSolicitud @default(NUEVA)
+  responsableId String?
+  responsable   User?           @relation(fields: [responsableId], references: [id], onDelete: SetNull)
+  notaInterna   String?
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  @@index([estado, creadoEn])
+  @@index([tipo])
+}
+
+model SolicitudAsesoria {
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  nombre   String
+  correo   String
+  telefono String?
+  mensaje  String?
+
+  nivel NivelCandidato
+  // El precio se congela al momento de solicitar: si mañana suben las tarifas,
+  // lo que se le ofreció a esta persona sigue siendo lo que vio.
+  precioMostrado Int
+  moneda         String @default("MXN")
+
+  estado      EstadoAsesoria @default(NUEVA)
+  notaInterna String?
+
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  @@index([estado, creadoEn])
+}
+
+// ---------------------------------------------------------------- bitácora
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  entidad   String
+  entidadId String
+  accion    String
+  datos     Json?
+  creadoEn  DateTime @default(now())
+
+  @@index([entidad, entidadId])
+  @@index([creadoEn])
+}
