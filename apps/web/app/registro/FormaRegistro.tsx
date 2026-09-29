@@ -9,8 +9,14 @@ export function FormaRegistro() {
   const [estado, accion, pendiente] = useActionState(registrar, inicial)
   const falla = (c: string) => estado.fallas?.find((f) => f.campo === c)?.mensaje
 
+  // Remonta al rechazar, igual que las otras formas: si solo se re-renderiza,
+  // cambiar `defaultValue` sobre un input ya montado deja el DOM en un estado
+  // que depende del momento, y el segundo intento llegaba a enviar la
+  // contrasena anterior.
+  const llave = JSON.stringify(estado.valores ?? null) + (estado.fallas?.length ?? 0)
+
   return (
-    <form action={accion} className="mt-6 border-rule border-ink p-5">
+    <form action={accion} key={llave} className="mt-6 border-rule border-ink p-5">
       <Campo
         etiqueta="Nombre"
         nombre="nombre"
