@@ -4,7 +4,8 @@ import { avisarSolicitudNueva } from '@/lib/avisos'
 import { cabecerasCors, responderPreflight } from '@/lib/cors'
 import { dentroDelLimite, origenDe, demasiadasPeticiones } from '@/lib/limite'
 
-const LIMITE = { maximo: 5, ventanaSegundos: 600 }
+/** Holgado: varias personas de una misma empresa pueden escribir el mismo día. */
+const LIMITE = { maximo: 20, ventanaSegundos: 3600 }
 
 export const dynamic = 'force-dynamic'
 

@@ -7,8 +7,11 @@ import { dentroDelLimite, origenDe, demasiadasPeticiones } from '@/lib/limite'
 
 export const dynamic = 'force-dynamic'
 
-/** Suficiente para quien se equivoca y reintenta; corto para quien automatiza. */
-const LIMITE = { maximo: 3, ventanaSegundos: 600 }
+/**
+ * Una persona necesita una asesoría, no diez. Aun así el tope va por IP, y una
+ * oficina entera comparte IP: se deja holgura para que nadie legítimo choque.
+ */
+const LIMITE = { maximo: 10, ventanaSegundos: 3600 }
 
 export async function POST(peticion: Request) {
   const limite = dentroDelLimite(`asesoria:${origenDe(peticion)}`, LIMITE)

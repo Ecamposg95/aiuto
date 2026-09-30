@@ -8,8 +8,13 @@ import { dentroDelLimite, origenDe, demasiadasPeticiones } from '@/lib/limite'
 
 export const dynamic = 'force-dynamic'
 
-/** Suficiente para quien se equivoca y reintenta; corto para quien automatiza. */
-const LIMITE = { maximo: 5, ventanaSegundos: 600 }
+/**
+ * Generoso a propósito: postularse a varias vacantes en una sentada es lo que
+ * hace alguien que busca trabajo en serio, y bloquearlo seria castigar el buen
+ * uso. Contra el spam a una misma vacante ya está la restricción única de
+ * (vacante, correo), que es mucho más precisa que un tope por IP.
+ */
+const LIMITE = { maximo: 30, ventanaSegundos: 3600 }
 
 export async function POST(peticion: Request) {
   const limite = dentroDelLimite(`postulacion:${origenDe(peticion)}`, LIMITE)
