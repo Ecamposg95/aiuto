@@ -36,7 +36,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Link href="/bolsa" className="text-ink hover:text-purple">
                 Bolsa de trabajo
               </Link>
-              <Link href="/asesoria" className="text-ink hover:text-purple">
+              <Link href="/sueldos" className="text-ink hover:text-purple">
+                Sueldos
+              </Link>
+              <Link href="/asesoria" className="hidden text-ink hover:text-purple sm:inline">
                 Asesoría
               </Link>
               <Link href="/contacto" className="text-ink hover:text-purple">

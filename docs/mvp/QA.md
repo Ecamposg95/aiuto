@@ -51,17 +51,36 @@ Los tokens se sacan del panel o con una consulta a la base; cambian en cada siem
 
 ## Vacantes
 
-Seis, una por cada estado posible. **Sólo tres se ven en la bolsa pública**: las otras están
-en borrador, cubiertas o vencidas, y su detalle devuelve 404.
+**23 en total, 19 abiertas**, tres por cada una de las siete categorías, en ocho empresas.
+Las cuatro restantes están en borrador, cubierta, cerrada o expirada: no salen en la bolsa
+pública y su detalle devuelve 404.
 
-| Vacante | Estado | Para qué sirve |
-| --- | --- | --- |
-| Soldador certificado | Abierta | Caso normal: presencial, IMSS completo, sueldo mensual |
-| Ingeniera de plataforma | Abierta | **IMSS mixto al 40 %**, remoto, 4 entrevistas. Vence pronto: aparece el aviso en rojo |
-| Auxiliar de almacén | Abierta | **Sueldo por hora y fijo** (mínimo = máximo) |
-| Analista de nómina | Borrador | Probar el botón de publicar del panel |
-| Contador general | Cubierta | Sus postulaciones se ven cerradas en cascada |
-| Coordinador de marketing | Expirada | Lo que deja la tarea de cierre automático |
+Los sueldos van de **$42 por hora** (operador de producción) a **$180,000 mensuales**
+(director de planeación), justamente para que la pantalla de sueldos tenga de dónde.
+
+Casos de borde sembrados a propósito:
+
+| Vacante | Qué cubre |
+| --- | --- |
+| Ingeniera de plataforma | IMSS mixto al 40 %, remoto, 4 entrevistas. **Vence en 6 días**: sale el aviso en rojo |
+| Operador de producción por turno | **Sueldo por hora**, turnos rotativos |
+| Auxiliar de almacén | Sueldo por hora **fijo** (mínimo = máximo) |
+| Promotor de punto de venta | El sueldo más bajo del catálogo |
+| Director de planeación estratégica | El más alto, con 5 entrevistas |
+| Analista de nómina | **Borrador**: para probar el botón de publicar |
+| Contador general | **Cubierta**: sus postulaciones se ven cerradas en cascada |
+| Coordinador de marketing | **Expirada**: lo que deja la tarea de cierre automático |
+| Supervisor de corte | **Cerrada** a mano |
+
+## Sueldos y empresas
+
+`/sueldos` calcula los rangos con las vacantes abiertas, no con encuestas. **Por debajo de
+3 vacantes en una categoría no publica cifra**, y lo dice: preferimos no dar un número que
+suene a dato sin serlo. Los sueldos por hora, semanales y quincenales se normalizan a
+mensuales con la jornada máxima de ley.
+
+`/empresa/<slug>` muestra las vacantes de una empresa y lo que paga. Con pocas vacantes
+tampoco inventa una mediana.
 
 ## Solicitudes y asesorías
 

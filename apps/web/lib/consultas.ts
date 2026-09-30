@@ -44,3 +44,39 @@ export async function categoriasConVacantes() {
   })
   return categorias.filter((c) => c._count.vacantes > 0)
 }
+
+export async function empresaPorSlug(slug: string) {
+  return prisma.company.findUnique({
+    where: { slug },
+    include: {
+      vacantes: {
+        where: vacantePublica(),
+        include: { category: true },
+        orderBy: { publicadaEn: 'desc' },
+      },
+    },
+  })
+}
+
+/** Empresas que tienen al menos una vacante abierta. */
+export async function empresasConVacantes() {
+  const empresas = await prisma.company.findMany({
+    orderBy: { nombre: 'asc' },
+    include: { _count: { select: { vacantes: { where: vacantePublica() } } } },
+  })
+  return empresas.filter((e) => e._count.vacantes > 0)
+}
+
+/** Lo mínimo para resumir sueldos, agrupado por categoría. */
+export async function sueldosPorCategoria() {
+  const categorias = await prisma.category.findMany({
+    orderBy: { orden: 'asc' },
+    include: {
+      vacantes: {
+        where: vacantePublica(),
+        select: { sueldoMin: true, sueldoMax: true, periodicidad: true },
+      },
+    },
+  })
+  return categorias
+}

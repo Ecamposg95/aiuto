@@ -78,7 +78,10 @@ export default async function DetalleVacante({ params }: { params: Promise<{ slu
 
       <h1 className="mt-4 text-h1">{vacante.puesto}</h1>
       <p className="mt-2 text-lead text-ink-2">
-        {vacante.company.nombre} · {vacante.ubicacion}
+        <Link href={`/empresa/${vacante.company.slug}`} className="text-ink underline hover:text-purple">
+          {vacante.company.nombre}
+        </Link>{' '}
+        · {vacante.ubicacion}
       </p>
 
       <div className="mt-7 grid gap-7 lg:grid-cols-[1.15fr_.85fr] lg:items-start">
