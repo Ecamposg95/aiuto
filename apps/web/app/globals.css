@@ -37,6 +37,67 @@
 }
 
 @layer components {
+  /* ---------------------------------------------------------- plataforma
+     Lo que convierte las pantallas con sesión en una consola de trabajo y no
+     en una página más del sitio. */
+
+  /* Las cifras de un panel tienen que alinear en columna. Con figuras
+     proporcionales, una tabla de sueldos se ve chueca. */
+  .cifras {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  /* El riel. Fijo en escritorio; arriba y compacto en móvil. */
+  .riel {
+    @apply bg-ink text-white;
+  }
+
+  .riel-enlace {
+    @apply flex items-center gap-3 border-l-4 border-transparent px-5 py-3
+           text-sm text-line transition hover:border-purple-300 hover:bg-purple-900 hover:text-white;
+  }
+
+  .riel-enlace[aria-current='page'] {
+    @apply border-purple-300 bg-purple-900 text-white;
+  }
+
+  /* Renglón de tablero: el color de la categoría entra como dato, no como
+     decoración. Se ve la mezcla de la lista de un vistazo. */
+  .renglon {
+    @apply border-b-px border-line-soft border-l-4 pl-4 transition hover:bg-off;
+  }
+
+  /* Estado. Lo que sigue abierto pesa; lo que ya se cerró se apaga. */
+  .estado {
+    @apply inline-flex items-center gap-2 px-2 py-1 text-label uppercase;
+  }
+  .estado--abierto {
+    @apply bg-ink text-white;
+  }
+  .estado--espera {
+    @apply bg-purple-100 text-purple-700;
+  }
+  .estado--cerrado {
+    @apply border-px border-line text-neutral;
+  }
+
+  /* Tablero de cifras: el único momento fuerte del panel. */
+  .cifra {
+    @apply block text-metric cifras;
+  }
+
+  /* Tabla densa, para que el trabajo del día quepa en una pantalla. */
+  .tabla {
+    @apply w-full border-collapse text-sm;
+  }
+  .tabla th {
+    @apply border-b-rule border-ink pb-2 text-left text-label uppercase text-neutral;
+  }
+  .tabla td {
+    @apply border-b-px border-line-soft py-3 align-top;
+  }
+
   .wrap {
     @apply mx-auto w-full max-w-wrap px-5 lg:px-7;
   }

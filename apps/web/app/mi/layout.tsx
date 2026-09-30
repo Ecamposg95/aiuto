@@ -4,33 +4,37 @@ import { SalirBoton } from '@/app/panel/SalirBoton'
 
 export const dynamic = 'force-dynamic'
 
-/** Todo lo que cuelga de /mi exige sesión. El equipo tiene su propia zona. */
+const SECCIONES = [
+  ['/mi', 'Mis postulaciones'],
+  ['/mi/perfil', 'Mi perfil'],
+  ['/bolsa', 'Buscar vacantes'],
+] as const
+
 export default async function MiLayout({ children }: { children: React.ReactNode }) {
   const usuario = await exigirCandidato()
+  const nombre = usuario.nombre ?? usuario.email
 
   return (
-    <div className="wrap max-w-[75ch] py-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b-rule border-ink pb-4">
-        <div>
-          <p className="label">Mi cuenta</p>
-          <p className="mt-1 text-sm text-ink-2">{usuario.nombre ?? usuario.email}</p>
+    <div className="wrap max-w-[78ch] py-6">
+      <header className="border-b-rule border-ink pb-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-neutral">Tu cuenta en AIUTO</p>
+            <p className="mt-1 text-h2">{nombre}</p>
+          </div>
+          <SalirBoton />
         </div>
-        <SalirBoton />
-      </div>
 
-      <nav className="mt-4 flex flex-wrap gap-2">
-        <Link href="/mi" className="border-px border-line px-3 py-2 text-sm transition hover:border-ink">
-          Mis postulaciones
-        </Link>
-        <Link href="/mi/perfil" className="border-px border-line px-3 py-2 text-sm transition hover:border-ink">
-          Mi perfil
-        </Link>
-        <Link href="/bolsa" className="border-px border-line px-3 py-2 text-sm transition hover:border-ink">
-          Ver vacantes
-        </Link>
-      </nav>
+        <nav className="mt-5 flex flex-wrap gap-5" aria-label="Secciones de tu cuenta">
+          {SECCIONES.map(([ruta, etiqueta]) => (
+            <Link key={ruta} href={ruta} className="text-ink-2 transition hover:text-purple">
+              {etiqueta}
+            </Link>
+          ))}
+        </nav>
+      </header>
 
-      <div className="mt-6">{children}</div>
+      <div className="mt-7">{children}</div>
     </div>
   )
 }
