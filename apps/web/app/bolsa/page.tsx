@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { formatearSueldo, etiquetaModalidad, etiquetaSeguroSocial, diasRestantes } from '@aiuto/core'
-import { vacantesAbiertas, categoriasConVacantes } from '@/lib/consultas'
+import { vacantesAbiertas, categoriasConVacantes, type FiltrosBolsa } from '@/lib/consultas'
+import { BuscadorBolsa } from './BuscadorBolsa'
 
 export const metadata: Metadata = {
   title: 'Bolsa de trabajo',
@@ -15,12 +16,20 @@ export const dynamic = 'force-dynamic'
 export default async function Bolsa({
   searchParams,
 }: {
-  searchParams: Promise<{ categoria?: string }>
+  searchParams: Promise<{ categoria?: string; q?: string; modalidad?: string; desde?: string }>
 }) {
-  const { categoria } = await searchParams
+  const params = await searchParams
+  const filtros: FiltrosBolsa = {
+    categoria: params.categoria,
+    q: params.q,
+    modalidad: params.modalidad,
+    desde: params.desde ? Number.parseInt(params.desde, 10) : undefined,
+  }
+  const buscando = Boolean(params.q || params.categoria || params.modalidad || params.desde)
+
   const [vacantes, categorias] = await Promise.all([
-    vacantesAbiertas(categoria),
-    categoriasConVacantes(),
+    vacantesAbiertas(filtros),
+    categoriasConVacantes(filtros),
   ])
   const ahora = new Date()
 
@@ -29,50 +38,39 @@ export default async function Bolsa({
       <p className="label">Bolsa de trabajo</p>
       <h1 className="mt-3 text-h1">
         {vacantes.length === 0
-          ? 'Todavía no hay vacantes abiertas'
-          : `${vacantes.length} ${vacantes.length === 1 ? 'vacante abierta' : 'vacantes abiertas'}`}
+          ? buscando
+            ? 'Nada que empate con esa búsqueda'
+            : 'Todavía no hay vacantes abiertas'
+          : `${vacantes.length} ${vacantes.length === 1 ? 'vacante' : 'vacantes'}`}
       </h1>
       <p className="mt-4 max-w-[62ch] text-lead text-ink-2">
-        Pocas, pero todas dicen cuánto pagan, qué prestaciones dan y cuántas entrevistas tiene
-        el proceso antes de que lo empieces.
+        Todas dicen cuánto pagan, qué prestaciones dan y cuántas entrevistas tiene el proceso
+        antes de que lo empieces.
       </p>
 
-      {categorias.length > 0 && (
-        <nav className="mt-6 flex flex-wrap gap-2" aria-label="Filtrar por categoría">
-          <Link
-            href="/bolsa"
-            className={`border-px px-3 py-2 text-sm transition ${
-              categoria ? 'border-line text-ink-2 hover:border-ink' : 'border-ink bg-ink text-white'
-            }`}
-          >
-            Todas
-          </Link>
-          {categorias.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/bolsa?categoria=${c.slug}`}
-              style={{ borderColor: categoria === c.slug ? c.color : undefined }}
-              className={`border-px px-3 py-2 text-sm transition ${
-                categoria === c.slug
-                  ? 'border-rule text-ink'
-                  : 'border-line text-ink-2 hover:border-ink'
-              }`}
-            >
-              {c.corto} <span className="text-neutral">({c._count.vacantes})</span>
-            </Link>
-          ))}
-        </nav>
-      )}
+      <BuscadorBolsa categorias={categorias} actual={params} />
 
       {vacantes.length === 0 ? (
-        <p className="mt-7 border-t-rule border-ink pt-5 text-ink-2">
-          Estamos armando el inventario con empresas que ya trabajan con nosotros. Si tu empresa
-          quiere publicar,{' '}
-          <Link href="/contacto" className="text-purple underline">
-            escríbenos
-          </Link>
-          .
-        </p>
+        <div className="mt-7 border-t-rule border-ink pt-5">
+          {buscando ? (
+            <p className="text-ink-2">
+              Prueba con menos filtros o con otra palabra.{' '}
+              <Link href="/bolsa" className="text-purple underline">
+                Ver todas las vacantes
+              </Link>
+              .
+            </p>
+          ) : (
+            <p className="text-ink-2">
+              Estamos armando el inventario con empresas que ya trabajan con nosotros. Si tu
+              empresa quiere publicar,{' '}
+              <Link href="/contacto" className="text-purple underline">
+                escríbenos
+              </Link>
+              .
+            </p>
+          )}
+        </div>
       ) : (
         <ul className="mt-7">
           {vacantes.map((v) => {

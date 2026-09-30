@@ -2,6 +2,9 @@ import { prisma } from '@aiuto/db'
 import { esquemaSolicitud } from '@/lib/esquemas'
 import { avisarSolicitudNueva } from '@/lib/avisos'
 import { cabecerasCors, responderPreflight } from '@/lib/cors'
+import { dentroDelLimite, origenDe, demasiadasPeticiones } from '@/lib/limite'
+
+const LIMITE = { maximo: 5, ventanaSegundos: 600 }
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +17,9 @@ export async function POST(peticion: Request) {
   const cors = cabecerasCors(peticion)
   const responder = (cuerpo: unknown, status: number) =>
     Response.json(cuerpo, { status, headers: cors })
+
+  const limite = dentroDelLimite(`solicitud:${origenDe(peticion)}`, LIMITE)
+  if (!limite.permitido) return demasiadasPeticiones(limite.esperaSegundos, cors)
 
   let cuerpo: unknown
   try {

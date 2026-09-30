@@ -34,7 +34,7 @@ document.addEventListener('keydown', (e) => {
 /* A dónde escriben los formularios. Se puede sobrescribir con
    <meta name="aiuto-api" content="..."> para probar contra otro entorno. */
 const API = document.querySelector('meta[name="aiuto-api"]')?.content
-  || 'https://app.aiuto.com.mx';
+  || 'https://aiuto-web-production.up.railway.app';
 
 /* Los selects de la landing traen texto en español; la API espera claves. */
 const TIPOS = {

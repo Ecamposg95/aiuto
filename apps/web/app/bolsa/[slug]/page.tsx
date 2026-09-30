@@ -6,8 +6,10 @@ import {
   etiquetaModalidad,
   etiquetaSeguroSocial,
   diasRestantes,
+  jobPosting,
 } from '@aiuto/core'
 import { vacantePorSlug } from '@/lib/consultas'
+import { basePublica } from '@/lib/correo'
 import { FormaPostulacion } from './FormaPostulacion'
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +38,24 @@ export default async function DetalleVacante({ params }: { params: Promise<{ slu
 
   const dias = diasRestantes(vacante.expiraEn, new Date())
 
+  // Datos estructurados para Google Jobs. Sin esto la vacante no aparece donde
+  // la gente busca trabajo, por muy bien hecha que esté la página.
+  const estructurado = jobPosting({
+    puesto: vacante.puesto,
+    descripcion: vacante.descripcion,
+    empresa: vacante.company.nombre,
+    empresaUrl: `${basePublica()}/empresa/${vacante.company.slug}`,
+    ubicacion: vacante.ubicacion,
+    modalidad: vacante.modalidad,
+    sueldoMin: vacante.sueldoMin,
+    sueldoMax: vacante.sueldoMax,
+    moneda: vacante.moneda,
+    periodicidad: vacante.periodicidad,
+    conocimientos: vacante.conocimientos,
+    publicadaEn: vacante.publicadaEn ?? vacante.creadoEn,
+    expiraEn: vacante.expiraEn,
+  })
+
   // Lo que ninguna otra bolsa obliga a publicar. Va primero, no en letras chicas.
   const transparencia = [
     ['Sueldo', formatearSueldo(vacante)],
@@ -61,6 +81,12 @@ export default async function DetalleVacante({ params }: { params: Promise<{ slu
         } as React.CSSProperties
       }
     >
+      <script
+        type="application/ld+json"
+        // El contenido lo arma jobPosting() a partir de la base; no viene del usuario.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(estructurado) }}
+      />
+
       <Link href="/bolsa" className="text-sm text-ink-2 hover:text-purple">
         ← Todas las vacantes
       </Link>

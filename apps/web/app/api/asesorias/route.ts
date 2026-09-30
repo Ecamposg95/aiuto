@@ -3,9 +3,17 @@ import { precioAsesoria, MONEDA_ASESORIA } from '@aiuto/core'
 import { esquemaAsesoria } from '@/lib/esquemas'
 import { avisarAsesoriaNueva } from '@/lib/avisos'
 
+import { dentroDelLimite, origenDe, demasiadasPeticiones } from '@/lib/limite'
+
 export const dynamic = 'force-dynamic'
 
+/** Suficiente para quien se equivoca y reintenta; corto para quien automatiza. */
+const LIMITE = { maximo: 3, ventanaSegundos: 600 }
+
 export async function POST(peticion: Request) {
+  const limite = dentroDelLimite(`asesoria:${origenDe(peticion)}`, LIMITE)
+  if (!limite.permitido) return demasiadasPeticiones(limite.esperaSegundos)
+
   let cuerpo: unknown
   try {
     cuerpo = await peticion.json()
