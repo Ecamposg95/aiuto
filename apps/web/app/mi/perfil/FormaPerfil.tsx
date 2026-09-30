@@ -37,13 +37,19 @@ export function FormaPerfil({ perfil }: { perfil: Perfil }) {
   return (
     <form action={accion} key={llave}>
       {estado.guardado && !estado.fallas && (
-        <p role="status" className="border-rule border-ink bg-off p-4 text-sm">
-          Guardado.
+        <p role="status" className="border-rule border-purple bg-purple-100 p-4">
+          Guardado. Vuelve a cargar la página para ver qué te falta ahora.
         </p>
       )}
 
-      <section className="mt-6">
-        <h2 className="label border-b-rule border-ink pb-2">Lo básico</h2>
+      {estado.fallas && estado.fallas.length > 0 && (
+        <p role="alert" className="border-rule border-operaciones bg-operaciones-tint p-4 text-sm">
+          Revisa los campos marcados abajo. Lo demás que escribiste sigue ahí.
+        </p>
+      )}
+
+      <section className="mt-7">
+        <h2 className="text-h3 border-b-rule border-ink pb-2">Lo básico</h2>
         <div className="mt-4 grid gap-4">
           <Campo
             etiqueta="Cómo te describes"
@@ -76,7 +82,7 @@ export function FormaPerfil({ perfil }: { perfil: Perfil }) {
       </section>
 
       <section className="mt-7">
-        <h2 className="label border-b-rule border-ink pb-2">Cómo contactarte</h2>
+        <h2 className="text-h3 border-b-rule border-ink pb-2">Cómo contactarte</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Campo
             etiqueta="Teléfono"
@@ -96,7 +102,7 @@ export function FormaPerfil({ perfil }: { perfil: Perfil }) {
       </section>
 
       <section className="mt-7">
-        <h2 className="label border-b-rule border-ink pb-2">Lo que sabes hacer</h2>
+        <h2 className="text-h3 border-b-rule border-ink pb-2">Lo que sabes hacer</h2>
         <div className="mt-4 grid gap-4">
           <Campo
             etiqueta="Habilidades"
@@ -131,9 +137,19 @@ export function FormaPerfil({ perfil }: { perfil: Perfil }) {
         </div>
       </section>
 
-      <button type="submit" className="btn mt-6" disabled={pendiente}>
-        {pendiente ? 'Guardando…' : 'Guardar perfil'}
-      </button>
+      {/* Colchón antes de la barra. Va aquí y no como padding del formulario:
+          el padding del formulario queda POR DEBAJO de la barra y no despeja
+          nada. Con esto el último campo puede subir por encima de ella. */}
+      <div aria-hidden className="h-20" />
+
+      {/* Barra de guardado fija: el formulario es largo y obligar a bajar hasta
+          el final para guardar es trabajo extra. Lleva z-index para quedar por
+          encima del contenido que pasa por debajo. */}
+      <div className="sticky bottom-0 z-10 border-t-rule border-ink bg-white py-4">
+        <button type="submit" className="btn" disabled={pendiente}>
+          {pendiente ? 'Guardando…' : 'Guardar cambios'}
+        </button>
+      </div>
     </form>
   )
 }
