@@ -13,7 +13,7 @@ export function FormaRegistro() {
   // cambiar `defaultValue` sobre un input ya montado deja el DOM en un estado
   // que depende del momento, y el segundo intento llegaba a enviar la
   // contrasena anterior.
-  const llave = JSON.stringify(estado.valores ?? null) + (estado.fallas?.length ?? 0)
+  const llave = estado.intento ?? 0
 
   return (
     <form action={accion} key={llave} className="mt-6 border-rule border-ink p-5">

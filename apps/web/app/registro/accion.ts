@@ -13,12 +13,18 @@ export type EstadoRegistro = {
    * nunca: no tiene por qué viajar de vuelta ni quedar en el HTML.
    */
   valores?: { nombre: string; correo: string }
+  intento?: number
 }
 
 export async function registrar(
-  _previo: EstadoRegistro,
+  previo: EstadoRegistro,
   datos: FormData,
 ): Promise<EstadoRegistro> {
+  // El contador sube en cada intento fallido, para que la llave del formulario
+  // cambie SIEMPRE. Con una llave derivada de los valores, dos intentos que
+  // fallan igual no remontarian, y el segundo llegaria con lo del primero.
+  const intento = (previo.intento ?? 0) + 1
+
   const valores = {
     nombre: String(datos.get('nombre') ?? ''),
     correo: String(datos.get('correo') ?? ''),
@@ -33,6 +39,7 @@ export async function registrar(
   if (!leido.success) {
     return {
       valores,
+      intento,
       fallas: leido.error.issues.map((i) => ({
         campo: String(i.path[0] ?? ''),
         mensaje: i.message,
@@ -41,11 +48,11 @@ export async function registrar(
   }
 
   const { nombre, correo, password, sitioWeb } = leido.data
-  if (sitioWeb) return { valores, error: 'No pudimos crear la cuenta.' }
+  if (sitioWeb) return { valores, intento, error: 'No pudimos crear la cuenta.' }
 
   const existente = await prisma.user.findUnique({ where: { email: correo } })
   if (existente) {
-    return { valores, fallas: [{ campo: 'correo', mensaje: 'Ya hay una cuenta con ese correo.' }] }
+    return { valores, intento, fallas: [{ campo: 'correo', mensaje: 'Ya hay una cuenta con ese correo.' }] }
   }
 
   const passwordHash = await bcrypt.hash(password, 12)

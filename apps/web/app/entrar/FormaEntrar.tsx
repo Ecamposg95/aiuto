@@ -8,8 +8,13 @@ const inicial: EstadoEntrada = {}
 export function FormaEntrar() {
   const [estado, accion, pendiente] = useActionState(acceder, inicial)
 
+  // Remonta en cada intento fallido. Sin esto, quien se equivoca de contraseña
+  // y la corrige manda el intento anterior: el DOM queda en un estado que
+  // depende de si el re-render alcanzó a pasar, y en producción no alcanza.
+  const llave = estado.intento ?? 0
+
   return (
-    <form action={accion} className="mt-6 border-rule border-ink p-5">
+    <form action={accion} key={llave} className="mt-6 border-rule border-ink p-5">
       <label className="block">
         <span className="label block">Correo</span>
         <input type="email" name="email" required autoComplete="username" className="campo mt-2" />

@@ -32,7 +32,7 @@ export function FormaPerfil({ perfil }: { perfil: Perfil }) {
 
   // Mismo motivo que en la forma de vacante: el <select> de nivel no vuelve a
   // aplicar `defaultValue` en un re-render y perderia lo elegido.
-  const llave = JSON.stringify(estado.valores ?? null)
+  const llave = estado.intento ?? 0
 
   return (
     <form action={accion} key={llave}>

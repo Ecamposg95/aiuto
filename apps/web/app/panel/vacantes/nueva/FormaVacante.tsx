@@ -70,13 +70,13 @@ export function FormaVacante({
   }
 
   /**
-   * Remonta el formulario cuando cambia lo devuelto. Hace falta por los <select>:
+   * Remonta el formulario en cada intento fallido. Hace falta por los <select>:
    * los campos de texto conservan su valor en el DOM por si solos, pero un select
    * no vuelve a aplicar `defaultValue` en un re-render, y la categoria elegida se
    * perdia al rechazar. Con el remontaje todos los campos se repintan desde
    * `valores`, y eso cubre igual el camino sin JavaScript.
    */
-  const llave = resultado.ok ? 'limpio' : JSON.stringify(resultado.valores)
+  const llave = resultado.ok ? 0 : resultado.intento
 
   return (
     <form action={accion} key={llave} ref={forma} className="max-w-[70ch]">

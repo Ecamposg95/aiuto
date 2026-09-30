@@ -46,7 +46,7 @@ export type ResultadoAccion =
    * catorce campos, y perderlos por un error de validacion obliga a capturar la
    * vacante entera otra vez.
    */
-  | { ok: false; fallas: Falla[]; valores: Record<string, string> }
+  | { ok: false; fallas: Falla[]; valores: Record<string, string>; intento: number }
 
 const texto = (d: FormData, k: string) => String(d.get(k) ?? '').trim()
 const entero = (d: FormData, k: string) => Number.parseInt(String(d.get(k) ?? ''), 10)
@@ -91,10 +91,14 @@ function leerFormularioVacante(datos: FormData) {
   return { crudo, nombreEmpresa, categoryId, vacante, fallas }
 }
 
-export async function crearVacante(_previo: unknown, datos: FormData): Promise<ResultadoAccion> {
+export async function crearVacante(previo: ResultadoAccion, datos: FormData): Promise<ResultadoAccion> {
   const usuario = await exigirStaff()
   const { crudo, nombreEmpresa, categoryId, vacante, fallas } = leerFormularioVacante(datos)
-  if (fallas.length > 0) return { ok: false, fallas, valores: crudo }
+  if (fallas.length > 0) {
+    // Sube en cada intento para que la llave del formulario cambie siempre.
+    const intento = (previo.ok ? 0 : previo.intento) + 1
+    return { ok: false, fallas, valores: crudo, intento }
+  }
 
   // La empresa se da de alta sola al capturar su primera vacante. En la Fase 1 no
   // se autoservicia ni tiene cuenta, así que un CRUD aparte sería una pantalla
@@ -146,13 +150,17 @@ export async function crearVacante(_previo: unknown, datos: FormData): Promise<R
  * expiracion: editar no es republicar, y el reloj de los 60 dias sigue corriendo
  * desde que se publico.
  */
-export async function editarVacante(_previo: unknown, datos: FormData): Promise<ResultadoAccion> {
+export async function editarVacante(previo: ResultadoAccion, datos: FormData): Promise<ResultadoAccion> {
   const usuario = await exigirStaff()
   const id = texto(datos, 'id')
   if (!id) throw new Error('Falta la vacante a editar.')
 
   const { crudo, nombreEmpresa, categoryId, vacante, fallas } = leerFormularioVacante(datos)
-  if (fallas.length > 0) return { ok: false, fallas, valores: crudo }
+  if (fallas.length > 0) {
+    // Sube en cada intento para que la llave del formulario cambie siempre.
+    const intento = (previo.ok ? 0 : previo.intento) + 1
+    return { ok: false, fallas, valores: crudo, intento }
+  }
 
   const slugEmpresa = generarSlug(nombreEmpresa)
   const empresa = await prisma.company.upsert({
