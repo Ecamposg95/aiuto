@@ -532,7 +532,18 @@ async function sembrar() {
     where: { user: { email: `egresado${DOMINIO_QA}` } },
   })
 
-  const POSTULACIONES = [
+  type SemillaPostulacion = {
+    /** Slug de la vacante, sin la marca. */
+    v: string
+    nombre: string
+    correo: string
+    estado: 'RECIBIDA' | 'EN_REVISION' | 'ENTREVISTA' | 'CONTRATADA' | 'RECHAZADA' | 'VACANTE_CUBIERTA'
+    dias: number
+    /** Sólo quien tiene cuenta lo lleva. */
+    perfil?: string
+  }
+
+  const POSTULACIONES: SemillaPostulacion[] = [
     // Una vacante muy solicitada: cinco personas en distintos momentos.
     { v: 'ingeniera-plataforma', nombre: 'Rosa Nueva (QA)', correo: `p1${DOMINIO_QA}`, estado: 'RECIBIDA', dias: 1 },
     { v: 'ingeniera-plataforma', nombre: 'Beto Revisión (QA)', correo: `p2${DOMINIO_QA}`, estado: 'EN_REVISION', dias: 4 },
@@ -553,7 +564,7 @@ async function sembrar() {
     { v: 'gerente-cadena-suministro', nombre: 'Mónica Ríos (QA)', correo: `p12${DOMINIO_QA}`, estado: 'EN_REVISION', dias: 5 },
     { v: 'auxiliar-contable', nombre: 'Noé Salas (QA)', correo: `p13${DOMINIO_QA}`, estado: 'RECIBIDA', dias: 3 },
     { v: 'operador-produccion-turno', nombre: 'Olga Pineda (QA)', correo: `p14${DOMINIO_QA}`, estado: 'RECIBIDA', dias: 1 },
-  ] as const
+  ]
 
   for (const x of POSTULACIONES) {
     const vacanteId = idDe(x.v)

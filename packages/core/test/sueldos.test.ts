@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { aMensual, resumirSueldos, MUESTRA_MINIMA } from '../src/sueldos.js'
+import { aMensual, resumirSueldos, MUESTRA_MINIMA, type MuestraSueldo } from '../src/sueldos.js'
+import type { Periodicidad } from '../src/tipos.js'
 
-const m = (min: number, max: number, periodicidad = 'MENSUAL' as const) => ({
+const m = (min: number, max: number, periodicidad: Periodicidad = 'MENSUAL'): MuestraSueldo => ({
   sueldoMin: min,
   sueldoMax: max,
   periodicidad,
@@ -56,11 +57,7 @@ describe('resumirSueldos', () => {
   })
 
   it('normaliza periodicidades distintas antes de comparar', () => {
-    const r = resumirSueldos([
-      m(30000, 30000, 'MENSUAL'),
-      m(15000, 15000, 'QUINCENAL'),
-      m(360000, 360000, 'ANUAL'),
-    ])
+    const r = resumirSueldos([m(30000, 30000), m(15000, 15000, 'QUINCENAL'), m(360000, 360000, 'ANUAL')])
     expect(r.suficiente).toBe(true)
     // Las tres valen 30,000 al mes.
     expect(r.min).toBe(30000)
