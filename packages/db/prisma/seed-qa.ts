@@ -21,7 +21,7 @@ const prisma = new PrismaClient()
 /** Todo lo sembrado aquí es reconocible por esto, para poder retirarlo entero. */
 const MARCA = 'qa-'
 const DOMINIO_QA = '@qa.aiuto.test'
-const PASSWORD_QA = 'QA-aiuto-2026'
+const PASSWORD_QA = 'aiuto123'
 
 const DIA = 24 * 60 * 60 * 1000
 const hace = (dias: number) => new Date(Date.now() - dias * DIA)
@@ -344,6 +344,9 @@ async function sembrar() {
   const perfilCarla = await prisma.candidateProfile.findFirst({
     where: { user: { email: `candidato${DOMINIO_QA}` } },
   })
+  const perfilEfren = await prisma.candidateProfile.findFirst({
+    where: { user: { email: `egresado${DOMINIO_QA}` } },
+  })
 
   const POSTULACIONES = [
     { vacanteId: abierta.id, nombre: 'Rosa Nueva (QA)', correo: `p1${DOMINIO_QA}`, estado: 'RECIBIDA', dias: 1 },
@@ -359,6 +362,16 @@ async function sembrar() {
     { vacanteId: cubierta.id, nombre: 'Dani Contratada (QA)', correo: `p4${DOMINIO_QA}`, estado: 'CONTRATADA', dias: 25 },
     { vacanteId: cubierta.id, nombre: 'Eva Rechazada (QA)', correo: `p5${DOMINIO_QA}`, estado: 'RECHAZADA', dias: 22 },
     { vacanteId: cubierta.id, nombre: 'Fer Sin Suerte (QA)', correo: `p6${DOMINIO_QA}`, estado: 'VACANTE_CUBIERTA', dias: 20 },
+    // Efrén ve el caso incómodo desde su propia cuenta; Gina se queda sin nada
+    // a propósito, para poder mirar el estado vacío de /mi.
+    {
+      vacanteId: abierta.id,
+      nombre: 'Efrén Egresado (QA)',
+      correo: `egresado${DOMINIO_QA}`,
+      estado: 'RECHAZADA',
+      dias: 12,
+      candidateProfileId: perfilEfren?.id,
+    },
   ] as const
 
   for (const p of POSTULACIONES) {

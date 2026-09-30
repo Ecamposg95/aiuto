@@ -51,9 +51,8 @@ export type ResultadoAccion =
 const texto = (d: FormData, k: string) => String(d.get(k) ?? '').trim()
 const entero = (d: FormData, k: string) => Number.parseInt(String(d.get(k) ?? ''), 10)
 
-export async function crearVacante(_previo: unknown, datos: FormData): Promise<ResultadoAccion> {
-  const usuario = await exigirStaff()
-
+/** Lee el formulario de vacante. Lo comparten crear y editar. */
+function leerFormularioVacante(datos: FormData) {
   const crudo = Object.fromEntries(
     [...datos.entries()].map(([k, v]) => [k, String(v)]),
   ) as Record<string, string>
@@ -88,6 +87,13 @@ export async function crearVacante(_previo: unknown, datos: FormData): Promise<R
 
   const revisado = validarVacante(vacante)
   if (!revisado.ok) fallas.push(...revisado.fallas)
+
+  return { crudo, nombreEmpresa, categoryId, vacante, fallas }
+}
+
+export async function crearVacante(_previo: unknown, datos: FormData): Promise<ResultadoAccion> {
+  const usuario = await exigirStaff()
+  const { crudo, nombreEmpresa, categoryId, vacante, fallas } = leerFormularioVacante(datos)
   if (fallas.length > 0) return { ok: false, fallas, valores: crudo }
 
   // La empresa se da de alta sola al capturar su primera vacante. En la Fase 1 no
@@ -125,6 +131,42 @@ export async function crearVacante(_previo: unknown, datos: FormData): Promise<R
   await bitacora(usuario.id, 'Vacante', creada.id, publicar ? 'creada y publicada' : 'creada', {
     puesto: creada.puesto,
   })
+
+  revalidatePath('/panel/vacantes')
+  revalidatePath('/bolsa')
+  redirect('/panel/vacantes')
+}
+
+/**
+ * Edita una vacante ya capturada.
+ *
+ * Se puede editar en cualquier estado: una vacante publicada con un dato mal
+ * puesto tiene que poder corregirse, y dejarla congelada obligaria a bajarla y
+ * volver a capturarla entera. Lo que NO cambia al editar es la fecha de
+ * expiracion: editar no es republicar, y el reloj de los 60 dias sigue corriendo
+ * desde que se publico.
+ */
+export async function editarVacante(_previo: unknown, datos: FormData): Promise<ResultadoAccion> {
+  const usuario = await exigirStaff()
+  const id = texto(datos, 'id')
+  if (!id) throw new Error('Falta la vacante a editar.')
+
+  const { crudo, nombreEmpresa, categoryId, vacante, fallas } = leerFormularioVacante(datos)
+  if (fallas.length > 0) return { ok: false, fallas, valores: crudo }
+
+  const slugEmpresa = generarSlug(nombreEmpresa)
+  const empresa = await prisma.company.upsert({
+    where: { slug: slugEmpresa },
+    create: { slug: slugEmpresa, nombre: nombreEmpresa, ubicacion: vacante.ubicacion },
+    update: {},
+  })
+
+  await prisma.vacante.update({
+    where: { id },
+    data: { ...vacante, companyId: empresa.id, categoryId },
+  })
+
+  await bitacora(usuario.id, 'Vacante', id, 'editada', { puesto: vacante.puesto })
 
   revalidatePath('/panel/vacantes')
   revalidatePath('/bolsa')

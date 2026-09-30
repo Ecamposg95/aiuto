@@ -7,7 +7,7 @@ Todo lo que hay aquí lo siembra `pnpm db:seed:qa` y lo retira `pnpm db:seed:qa 
 
 ## Cuentas
 
-Todas con la misma contraseña: **`QA-aiuto-2026`**
+Todas con la misma contraseña: **`aiuto123`**
 
 Se entra por `/entrar`. Cada rol cae donde le toca: el equipo en `/panel`, los candidatos en
 `/mi`. Si alguien intenta entrar a la zona que no le corresponde, se le redirige.
@@ -24,8 +24,8 @@ Se entra por `/entrar`. Cada rol cae donde le toca: el equipo en `/panel`, los c
 | Correo | Quién es | Qué permite probar |
 | --- | --- | --- |
 | `candidato@qa.aiuto.test` | Carla, desarrolladora backend, 6 años | **El caso completo**: tiene una postulación en entrevista y está en el roster preferencial |
-| `egresado@qa.aiuto.test` | Efrén, pasante, 0 años | Perfil de entrada, **sin** roster y **sin** postulaciones: el estado vacío de `/mi` |
-| `gerente@qa.aiuto.test` | Gina, directora de operaciones, 15 años | Nivel gerencial con roster, sin postulaciones |
+| `egresado@qa.aiuto.test` | Efrén, pasante, 0 años | Sin roster, y con una postulación **rechazada**: cómo se ve la mala noticia desde el lado del candidato |
+| `gerente@qa.aiuto.test` | Gina, directora de operaciones, 15 años | Nivel gerencial con roster y **sin postulaciones**: el estado vacío de `/mi` |
 
 ### No hay cuentas de empresa
 
@@ -68,6 +68,19 @@ en borrador, cubiertas o vencidas, y su detalle devuelve 404.
 Cuatro solicitudes de contacto, una por cada estado (nueva, en proceso, atendida, cerrada);
 la bandeja sólo muestra las dos primeras. Seis solicitudes de asesoría, una por cada estado
 del embudo, con los tres precios.
+
+## Atajos para probar sin capturar de más
+
+Con `MODO_QA=1` en el entorno, el formulario de vacante muestra un botón
+**«Llenar con datos de ejemplo»**: llena los catorce campos de una pasada y se puede publicar
+de un clic. Está pensado para recorrer el flujo sin capturar a mano cada vez.
+
+Lo que **no** se relaja, ni en QA, son las reglas de la vacante: sin sueldo, sin porcentaje de
+seguro social o con un máximo menor que el mínimo, no se guarda. Son el producto, no un
+trámite.
+
+Las vacantes se pueden **editar** en cualquier estado desde el listado del panel. Editar no
+reinicia el plazo: el reloj de los 60 días sigue corriendo desde que se publicó.
 
 ## Recorridos que vale la pena probar
 

@@ -65,7 +65,13 @@ export default async function PanelVacantes() {
                   {v._count.postulaciones === 1 ? 'postulación' : 'postulaciones'}
                 </p>
 
-                <div className="mt-3 flex flex-wrap gap-3">
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <Link
+                    href={`/panel/vacantes/${v.id}/editar`}
+                    className="text-sm text-purple underline"
+                  >
+                    Editar
+                  </Link>
                   {v.estado === 'ABIERTA' && (
                     <Link href={`/bolsa/${v.slug}`} className="text-sm text-purple underline">
                       Ver publicada

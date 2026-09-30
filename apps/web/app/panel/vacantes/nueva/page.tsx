@@ -16,7 +16,7 @@ export default async function NuevaVacante() {
         ← Vacantes
       </Link>
       <h1 className="mt-3 text-h2">Nueva vacante</h1>
-      <FormaVacante categorias={categorias} />
+      <FormaVacante categorias={categorias} modoQA={process.env.MODO_QA === '1'} />
     </>
   )
 }

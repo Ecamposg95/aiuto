@@ -1,19 +1,73 @@
 'use client'
 
-import { useActionState } from 'react'
-import { crearVacante, type ResultadoAccion } from '@/lib/acciones'
+import { useActionState, useRef } from 'react'
+import { crearVacante, editarVacante, type ResultadoAccion } from '@/lib/acciones'
 
 type Categoria = { id: string; nombre: string }
 
 const estadoInicial: ResultadoAccion = { ok: true }
 
-export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
-  const [resultado, accion, pendiente] = useActionState(crearVacante, estadoInicial)
+/** Con qué se llena el formulario al pulsar «datos de ejemplo». Sólo en QA. */
+const EJEMPLO: Record<string, string> = {
+  empresa: 'Aceros del Pacífico',
+  puesto: 'Jefe de producción',
+  ubicacion: 'Manzanillo, Colima',
+  modalidad: 'HIBRIDO',
+  descripcion: 'Dirigir la planta, el equipo de turno y los indicadores de producción.',
+  sueldoMin: '48000',
+  sueldoMax: '62000',
+  periodicidad: 'MENSUAL',
+  seguroSocial: 'COMPLETO',
+  seguroSocialPct: '100',
+  prestaciones: 'Ley, fondo de ahorro, comedor, seguro de gastos médicos mayores.',
+  horario: 'Lunes a sábado, turno matutino de 7:00 a 16:00.',
+  conocimientos: 'Lean Manufacturing, SMED, Seguridad industrial',
+  numEntrevistas: '2',
+  diasCierreEsperado: '30',
+}
+
+export function FormaVacante({
+  categorias,
+  vacanteId,
+  valoresIniciales,
+  modoQA = false,
+}: {
+  categorias: Categoria[]
+  /** Presente sólo al editar. */
+  vacanteId?: string
+  valoresIniciales?: Record<string, string>
+  modoQA?: boolean
+}) {
+  const editando = Boolean(vacanteId)
+  const [resultado, accion, pendiente] = useActionState(
+    editando ? editarVacante : crearVacante,
+    estadoInicial,
+  )
+  const forma = useRef<HTMLFormElement>(null)
   const fallas = resultado.ok ? [] : resultado.fallas
   const falla = (campo: string) => fallas.find((f) => f.campo === campo)?.mensaje
 
-  /** Lo capturado vuelve a pintarse cuando la validacion rechaza. */
-  const valor = (campo: string) => (resultado.ok ? '' : (resultado.valores[campo] ?? ''))
+  /**
+   * Qué se pinta en cada campo: lo que se acaba de capturar si la validación
+   * rechazó, y si no, lo que ya tenía la vacante (al editar) o nada.
+   */
+  const valor = (campo: string) =>
+    resultado.ok ? (valoresIniciales?.[campo] ?? '') : (resultado.valores[campo] ?? '')
+
+  /** Llena todo de una pasada. Existe para no capturar catorce campos a mano
+   *  cada vez que se prueba el flujo; no se muestra fuera de QA. */
+  function llenarDeEjemplo() {
+    const f = forma.current
+    if (!f) return
+    for (const [campo, v] of Object.entries(EJEMPLO)) {
+      const control = f.elements.namedItem(campo)
+      if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) control.value = v
+      else if (control instanceof HTMLSelectElement) control.value = v
+    }
+    // La categoría se elige por id, que cambia en cada base.
+    const cat = f.elements.namedItem('categoryId')
+    if (cat instanceof HTMLSelectElement && categorias[0]) cat.value = categorias[0].id
+  }
 
   /**
    * Remonta el formulario cuando cambia lo devuelto. Hace falta por los <select>:
@@ -25,7 +79,19 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
   const llave = resultado.ok ? 'limpio' : JSON.stringify(resultado.valores)
 
   return (
-    <form action={accion} key={llave} className="max-w-[70ch]">
+    <form action={accion} key={llave} ref={forma} className="max-w-[70ch]">
+      {vacanteId && <input type="hidden" name="id" value={vacanteId} />}
+
+      {modoQA && (
+        <button
+          type="button"
+          onClick={llenarDeEjemplo}
+          className="btn-secundario mb-5 px-4 py-2 text-sm"
+        >
+          Llenar con datos de ejemplo
+        </button>
+      )}
+
       {fallas.length > 0 && (
         <p role="alert" className="border-rule border-operaciones bg-operaciones-tint p-4 text-sm">
           Faltan {fallas.length} {fallas.length === 1 ? 'dato' : 'datos'}. Están marcados abajo.
@@ -119,15 +185,31 @@ export function FormaVacante({ categorias }: { categorias: Categoria[] }) {
       </Bloque>
 
       <div className="mt-6 flex flex-wrap gap-4 border-t-rule border-ink pt-5">
-        <button type="submit" name="publicar" value="si" className="btn" disabled={pendiente}>
-          {pendiente ? 'Guardando…' : 'Publicar ahora'}
-        </button>
-        <button type="submit" name="publicar" value="no" className="btn-secundario" disabled={pendiente}>
-          Guardar como borrador
-        </button>
+        {editando ? (
+          <button type="submit" className="btn" disabled={pendiente}>
+            {pendiente ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+        ) : (
+          <>
+            <button type="submit" name="publicar" value="si" className="btn" disabled={pendiente}>
+              {pendiente ? 'Guardando…' : 'Publicar ahora'}
+            </button>
+            <button
+              type="submit"
+              name="publicar"
+              value="no"
+              className="btn-secundario"
+              disabled={pendiente}
+            >
+              Guardar como borrador
+            </button>
+          </>
+        )}
       </div>
       <p className="mt-3 text-sm text-neutral">
-        Al publicar, la vacante vive 60 días y después se cierra sola.
+        {editando
+          ? 'Editar no reinicia el plazo: el reloj de los 60 días sigue corriendo desde que se publicó.'
+          : 'Al publicar, la vacante vive 60 días y después se cierra sola.'}
       </p>
     </form>
   )
