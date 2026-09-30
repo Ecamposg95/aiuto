@@ -28,10 +28,29 @@ function limpiar(ahora: number) {
 
 export type ResultadoLimite = { permitido: boolean; restantes: number; esperaSegundos: number }
 
+/**
+ * Salida para el arnés de pruebas.
+ *
+ * Las suites recorren los mismos endpoints una y otra vez desde una sola IP, y
+ * sin esto chocarían contra el tope y dejarían de probar lo que van a probar.
+ * Exige el mismo secreto que la tarea programada: quien lo tiene ya podía
+ * cerrar vacantes, asi que no abre nada nuevo.
+ */
+function traeElPase(peticion: Request): boolean {
+  const secreto = process.env.TAREAS_SECRET
+  if (!secreto) return false
+  return peticion.headers.get('x-aiuto-pase') === secreto
+}
+
 export function dentroDelLimite(
   clave: string,
   opciones: { maximo: number; ventanaSegundos: number },
+  peticion?: Request,
 ): ResultadoLimite {
+  if (peticion && traeElPase(peticion)) {
+    return { permitido: true, restantes: opciones.maximo, esperaSegundos: 0 }
+  }
+
   const ahora = Date.now()
   limpiar(ahora)
 

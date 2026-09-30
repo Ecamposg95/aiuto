@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 const LIMITE = { maximo: 10, ventanaSegundos: 3600 }
 
 export async function POST(peticion: Request) {
-  const limite = dentroDelLimite(`asesoria:${origenDe(peticion)}`, LIMITE)
+  const limite = dentroDelLimite(`asesoria:${origenDe(peticion)}`, LIMITE, peticion)
   if (!limite.permitido) return demasiadasPeticiones(limite.esperaSegundos)
 
   let cuerpo: unknown

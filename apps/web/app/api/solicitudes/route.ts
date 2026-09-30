@@ -19,7 +19,7 @@ export async function POST(peticion: Request) {
   const responder = (cuerpo: unknown, status: number) =>
     Response.json(cuerpo, { status, headers: cors })
 
-  const limite = dentroDelLimite(`solicitud:${origenDe(peticion)}`, LIMITE)
+  const limite = dentroDelLimite(`solicitud:${origenDe(peticion)}`, LIMITE, peticion)
   if (!limite.permitido) return demasiadasPeticiones(limite.esperaSegundos, cors)
 
   let cuerpo: unknown
