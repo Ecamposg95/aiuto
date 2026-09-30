@@ -29,7 +29,29 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-/* ---------- formularios: validación en cliente + honeypot; el envío sigue simulado ---------- */
+/* ---------- formularios: validación en cliente + honeypot + envío real ---------- */
+
+/* A dónde escriben los formularios. Se puede sobrescribir con
+   <meta name="aiuto-api" content="..."> para probar contra otro entorno. */
+const API = document.querySelector('meta[name="aiuto-api"]')?.content
+  || 'https://app.aiuto.com.mx';
+
+/* Los selects de la landing traen texto en español; la API espera claves. */
+const TIPOS = {
+  'Solución para mi empresa': 'CATEGORIA',
+  'Servicios para talento': 'CONTACTO',
+  'Publicar una vacante': 'EMPRESA',
+  'Quiero ser especialista AIUTO': 'CONTACTO',
+};
+const CATEGORIAS = {
+  'Consultoría Estratégica': 'estrategia',
+  'Comercial y Crecimiento': 'comercial',
+  'Capital Humano': 'capital-humano',
+  'Operaciones': 'operaciones',
+  'Tecnología e Innovación': 'tecnologia',
+  'Finanzas y Administración': 'finanzas',
+  'Comercio Exterior & Supply Chain': 'comex',
+};
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const fieldError = (input, msg) => {
   const field = input.closest('.field'); if (!field) return;
@@ -61,23 +83,82 @@ const validate = (form) => {
   if (first) first.focus();
   return !first;
 };
+/* Arma el cuerpo que espera la API a partir de los campos de la landing. */
+const cuerpoSolicitud = (form, origen) => {
+  const d = Object.fromEntries(new FormData(form));
+  const tipoTexto = (d.tipo || '').trim();
+  const catTexto = (d.categoria || '').trim();
+  return {
+    tipo: TIPOS[tipoTexto] || 'CONTACTO',
+    categoriaSlug: CATEGORIAS[catTexto] || '',
+    nombre: (d.nombre || '').trim(),
+    correo: (d.email || '').trim(),
+    telefono: (d.telefono || '').trim(),
+    empresa: (d.empresa || '').trim(),
+    mensaje: (d.necesidad || '').trim(),
+    origen,
+    sitioWeb: d._hp || '',
+  };
+};
+
+const avisoEnvio = (form, texto) => {
+  let aviso = form.querySelector('[data-aviso-envio]');
+  if (!aviso) {
+    aviso = document.createElement('p');
+    aviso.setAttribute('data-aviso-envio', '');
+    aviso.setAttribute('role', 'alert');
+    aviso.className = 'note';
+    aviso.style.color = 'var(--red)';
+    form.querySelector('button[type="submit"]').before(aviso);
+  }
+  aviso.textContent = texto;
+};
+
 document.querySelectorAll('form[data-mock-submit]').forEach((form) => {
   form.setAttribute('novalidate', '');
   form.addEventListener('input', (e) => { if (e.target.matches('.input')) clearError(e.target); });
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (form.querySelector('input[name="_hp"]')?.value) return; // honeypot
     if (!validate(form)) return;
+
     const btn = form.querySelector('button[type="submit"]');
     const ok = form.querySelector('[data-success]');
     const label = btn.textContent;
-    btn.innerHTML = '<span class="spinner"></span>Enviando…'; btn.disabled = true;
-    setTimeout(() => {
-      btn.disabled = false; btn.textContent = 'Solicitud enviada ✓';
-      if (ok) { ok.hidden = false; }
-      if (form.dataset.mockSubmit === 'replace') { form.hidden = true; const p = form.parentElement.querySelector('[data-success-panel]'); if (p) p.hidden = false; }
-      setTimeout(() => { btn.textContent = label; }, 4000);
-    }, 900);
+    form.querySelector('[data-aviso-envio]')?.remove();
+    btn.innerHTML = '<span class="spinner"></span>Enviando…';
+    btn.disabled = true;
+
+    const origen = document.body.dataset.pagina || location.pathname.replace(/^\//, '') || 'landing';
+    let respuesta = null;
+    try {
+      respuesta = await fetch(API + '/api/solicitudes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cuerpoSolicitud(form, origen)),
+      });
+    } catch (_) { /* sin conexión: se trata abajo */ }
+
+    btn.disabled = false;
+
+    if (!respuesta || !respuesta.ok) {
+      btn.textContent = label;
+      /* No se finge éxito: si el mensaje no llegó, la persona tiene que saberlo
+         para poder escribirnos por otro lado. */
+      avisoEnvio(form, respuesta && respuesta.status === 422
+        ? 'Revisa los datos: algo no quedó bien.'
+        : 'No pudimos enviar tu mensaje. Inténtalo otra vez o escríbenos por WhatsApp.');
+      return;
+    }
+
+    btn.textContent = 'Solicitud enviada ✓';
+    if (ok) ok.hidden = false;
+    if (form.dataset.mockSubmit === 'replace') {
+      form.hidden = true;
+      const panel = form.parentElement.querySelector('[data-success-panel]');
+      if (panel) panel.hidden = false;
+    }
+    setTimeout(() => { btn.textContent = label; }, 4000);
   });
 });
 

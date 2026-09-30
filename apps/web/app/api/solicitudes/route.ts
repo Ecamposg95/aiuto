@@ -1,15 +1,25 @@
 import { prisma } from '@aiuto/db'
 import { esquemaSolicitud } from '@/lib/esquemas'
 import { avisarSolicitudNueva } from '@/lib/avisos'
+import { cabecerasCors, responderPreflight } from '@/lib/cors'
 
 export const dynamic = 'force-dynamic'
 
+// La landing publicada en aiuto.com.mx escribe aquí desde otro dominio.
+export async function OPTIONS(peticion: Request) {
+  return responderPreflight(peticion)
+}
+
 export async function POST(peticion: Request) {
+  const cors = cabecerasCors(peticion)
+  const responder = (cuerpo: unknown, status: number) =>
+    Response.json(cuerpo, { status, headers: cors })
+
   let cuerpo: unknown
   try {
     cuerpo = await peticion.json()
   } catch {
-    return Response.json({ error: 'Cuerpo inválido.' }, { status: 400 })
+    return responder({ error: 'Cuerpo inválido.' }, 400)
   }
 
   const leido = esquemaSolicitud.safeParse(cuerpo)
@@ -18,11 +28,11 @@ export async function POST(peticion: Request) {
       campo: String(i.path[0] ?? ''),
       mensaje: i.message,
     }))
-    return Response.json({ fallas }, { status: 422 })
+    return responder({ fallas }, 422)
   }
 
   const datos = leido.data
-  if (datos.sitioWeb) return Response.json({ ok: true }, { status: 201 })
+  if (datos.sitioWeb) return responder({ ok: true }, 201)
 
   const categoria = datos.categoriaSlug
     ? await prisma.category.findUnique({
@@ -54,9 +64,9 @@ export async function POST(peticion: Request) {
       categoria: categoria?.nombre ?? null,
     })
 
-    return Response.json({ ok: true }, { status: 201 })
+    return responder({ ok: true }, 201)
   } catch (error) {
     console.error('No se pudo guardar la solicitud', error)
-    return Response.json({ error: 'No pudimos guardar tu mensaje.' }, { status: 500 })
+    return responder({ error: 'No pudimos guardar tu mensaje.' }, 500)
   }
 }
