@@ -68,6 +68,21 @@ export async function POST(peticion: Request) {
       })
     : null
 
+  // Se comprueba antes de insertar. Dejarlo sólo al catch funciona, pero Prisma
+  // registra la violación como `prisma:error` antes de que podamos atraparla, y
+  // un caso de negocio esperado no debe verse como una falla en la bitácora:
+  // llenarla de errores que no lo son entrena a ignorar los que sí.
+  const yaSePostulo = await prisma.postulacion.findUnique({
+    where: { vacanteId_correo: { vacanteId: vacante.id, correo: datos.correo } },
+    select: { id: true },
+  })
+  if (yaSePostulo) {
+    return Response.json(
+      { error: 'Ya te habías postulado a esta vacante con ese correo.' },
+      { status: 409 },
+    )
+  }
+
   try {
     const postulacion = await prisma.postulacion.create({
       data: {
@@ -93,7 +108,8 @@ export async function POST(peticion: Request) {
 
     return Response.json({ ok: true, token: postulacion.tokenConsulta }, { status: 201 })
   } catch (error) {
-    // Una postulación por persona y vacante: la restricción única la garantiza.
+    // Red de seguridad para dos envíos simultáneos, que la comprobación de
+    // arriba no alcanza a ver. La restricción de la base es la que manda.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return Response.json(
         { error: 'Ya te habías postulado a esta vacante con ese correo.' },
