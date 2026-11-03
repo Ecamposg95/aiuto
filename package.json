@@ -23,6 +23,7 @@
     "db:seed:qa": "pnpm --filter @aiuto/db run seed:qa"
   },
   "devDependencies": {
+    "railway": "3.16.0",
     "typescript": "^5.7.3"
   }
 }
