@@ -1,5 +1,6 @@
 import { prisma } from '@aiuto/db'
 import { exigirStaff } from '@/lib/sesion'
+import { sinLeer } from '@/lib/notificaciones'
 import { Riel } from './Riel'
 import { SalirBoton } from './SalirBoton'
 
@@ -10,17 +11,30 @@ export default async function PanelLayout({ children }: { children: React.ReactN
 
   // Los pendientes van en el riel: es lo primero que alguien quiere saber al
   // entrar, y obligarlo a abrir cada sección para averiguarlo es trabajo extra.
-  const [solicitudes, postulaciones, asesorias] = await Promise.all([
+  const [solicitudes, postulaciones, asesorias, alertas, empresas, avisos] = await Promise.all([
     prisma.solicitud.count({ where: { estado: { in: ['NUEVA', 'EN_PROCESO'] } } }),
     prisma.postulacion.count({ where: { estado: 'RECIBIDA' } }),
     prisma.solicitudAsesoria.count({ where: { estado: 'NUEVA' } }),
+    prisma.alerta.count({ where: { estado: 'ABIERTA' } }),
+    prisma.company.count({ where: { estado: 'PENDIENTE' } }),
+    sinLeer(usuario.id),
   ])
+  const admin = usuario.rol === 'STAFF_ADMIN'
 
   const secciones = [
     { ruta: '/panel', etiqueta: 'Bandeja', pendientes: solicitudes },
+    { ruta: '/panel/alertas', etiqueta: 'Alertas', pendientes: alertas },
     { ruta: '/panel/vacantes', etiqueta: 'Vacantes' },
     { ruta: '/panel/postulaciones', etiqueta: 'Postulaciones', pendientes: postulaciones },
     { ruta: '/panel/asesorias', etiqueta: 'Asesorías', pendientes: asesorias },
+    ...(admin
+      ? [
+          { ruta: '/panel/empresas', etiqueta: 'Empresas', pendientes: empresas },
+          { ruta: '/panel/usuarios', etiqueta: 'Usuarios' },
+        ]
+      : []),
+    { ruta: '/panel/indicadores', etiqueta: 'Indicadores' },
+    { ruta: '/panel/avisos', etiqueta: 'Avisos', pendientes: avisos },
   ]
 
   return (

@@ -1,9 +1,14 @@
 'use server'
 
+import { headers } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@aiuto/db'
 import { signIn } from '@/auth'
+import { correoVerificar } from '@aiuto/core'
 import { esquemaRegistro } from '@/lib/esquemas'
+import { emitirFicha } from '@/lib/fichas'
+import { enviarCorreo, basePublica } from '@/lib/correo'
+import { dentroDelLimite, origenDeCabeceras, traeElPaseEn } from '@/lib/limite'
 
 export type EstadoRegistro = {
   error?: string
@@ -50,6 +55,19 @@ export async function registrar(
   const { nombre, correo, password, sitioWeb } = leido.data
   if (sitioWeb) return { valores, intento, error: 'No pudimos crear la cuenta.' }
 
+  // Cinco cuentas por hora y conexión. Va después de validar para que quien se
+  // equivoca al capturar no gaste sus intentos.
+  const h = await headers()
+  const tope = dentroDelLimite(
+    `registro:${origenDeCabeceras(h)}`,
+    { maximo: 5, ventanaSegundos: 60 * 60 },
+    undefined,
+    traeElPaseEn(h),
+  )
+  if (!tope.permitido) {
+    return { valores, intento, error: 'Demasiados registros desde esta conexión. Inténtalo más tarde.' }
+  }
+
   const existente = await prisma.user.findUnique({ where: { email: correo } })
   if (existente) {
     return { valores, intento, fallas: [{ campo: 'correo', mensaje: 'Ya hay una cuenta con ese correo.' }] }
@@ -57,20 +75,17 @@ export async function registrar(
 
   const passwordHash = await bcrypt.hash(password, 12)
 
-  const usuario = await prisma.user.create({
+  await prisma.user.create({
     data: { email: correo, nombre, rol: 'CANDIDATO', passwordHash, perfil: { create: { nivel: 'EXPERIMENTADO' } } },
-    include: { perfil: true },
   })
 
-  // Quien ya se habia postulado sin cuenta se encuentra su historial al entrar:
-  // las postulaciones se ligan por correo, que es lo unico que teniamos de esa
-  // persona hasta ahora.
-  if (usuario.perfil) {
-    await prisma.postulacion.updateMany({
-      where: { correo, candidateProfileId: null },
-      data: { candidateProfileId: usuario.perfil.id },
-    })
-  }
+  // Las postulaciones hechas sin cuenta se ligan al confirmar el correo, no
+  // aquí: registrarse con un correo no prueba que sea de uno.
+  const ficha = await emitirFicha('verificar', correo)
+  await enviarCorreo(correoVerificar({ nombre, liga: `${basePublica()}/verificar/${ficha}` }), {
+    correo,
+    nombre,
+  })
 
   // signIn lanza la redirección al tener éxito: se deja propagar.
   await signIn('credentials', { email: correo, password, redirectTo: '/mi/perfil' })

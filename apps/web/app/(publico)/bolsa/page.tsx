@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic'
 export default async function Bolsa({
   searchParams,
 }: {
-  searchParams: Promise<{ categoria?: string; q?: string; modalidad?: string; desde?: string }>
+  searchParams: Promise<{ categoria?: string; q?: string; modalidad?: string; desde?: string; empresa?: string; ubicacion?: string }>
 }) {
   const params = await searchParams
   const filtros: FiltrosBolsa = {
@@ -24,8 +24,10 @@ export default async function Bolsa({
     q: params.q,
     modalidad: params.modalidad,
     desde: params.desde ? Number.parseInt(params.desde, 10) : undefined,
+    empresa: params.empresa,
+    ubicacion: params.ubicacion,
   }
-  const buscando = Boolean(params.q || params.categoria || params.modalidad || params.desde)
+  const buscando = Boolean(params.q || params.categoria || params.modalidad || params.desde || params.empresa || params.ubicacion)
 
   const [vacantes, categorias] = await Promise.all([
     vacantesAbiertas(filtros),
@@ -85,7 +87,7 @@ export default async function Bolsa({
                     >
                       {v.category.corto}
                     </span>
-                    {dias !== null && dias <= 14 && (
+                    {dias !== null && dias <= 7 && (
                       <span className="text-label uppercase text-operaciones">
                         {dias === 0 ? 'Vence hoy' : `Quedan ${dias} días`}
                       </span>
@@ -97,7 +99,20 @@ export default async function Bolsa({
                     {v.company.nombre} · {v.ubicacion} · {etiquetaModalidad(v.modalidad)}
                   </p>
 
-                  <p className="mt-3 text-h4">{formatearSueldo(v)}</p>
+                  <p className="mt-3 text-h4">
+                    {formatearSueldo(v)}
+                    {v.sueldoNeto && <span className="ml-2 text-sm font-normal text-ink-2">neto</span>}
+                  </p>
+
+                  {/* Descripción breve y hasta cinco habilidades (máster prompt §7.2). */}
+                  <p className="mt-2 line-clamp-2 max-w-[68ch] text-sm text-ink-2">{v.descripcion}</p>
+                  {v.conocimientos.length > 0 && (
+                    <ul className="mt-3 flex flex-wrap gap-2" aria-label="Habilidades clave">
+                      {v.conocimientos.slice(0, 5).map((c) => (
+                        <li key={c} className="border-px border-line px-2 py-[2px] text-sm">{c}</li>
+                      ))}
+                    </ul>
+                  )}
 
                   <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-2">
                     <li>{etiquetaSeguroSocial(v.seguroSocial, v.seguroSocialPct)}</li>

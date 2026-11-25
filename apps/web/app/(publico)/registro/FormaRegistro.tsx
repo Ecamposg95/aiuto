@@ -30,7 +30,7 @@ export function FormaRegistro() {
         tipo="email"
         falla={falla('correo')}
         autoComplete="email"
-        ayuda="Si ya te postulaste con este correo, vas a encontrar tu historial."
+        ayuda="Si ya te postulaste con este correo, tu historial aparece al confirmarlo."
         valor={estado.valores?.correo ?? ''}
       />
       <Campo

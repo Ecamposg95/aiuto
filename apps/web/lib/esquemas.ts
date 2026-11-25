@@ -34,6 +34,19 @@ export const esquemaRegistro = z.object({
   sitioWeb: z.string().optional(),
 })
 
+/**
+ * Una liga http o https. `z.url()` solo acepta también `javascript:` y
+ * `data:`, que en un href ejecutan código en la sesión de quien la abre.
+ */
+export const liga = z
+  .string()
+  .trim()
+  .max(300)
+  .url('Esa liga no se ve bien.')
+  .refine((u) => /^https?:\/\//i.test(u), 'La liga tiene que empezar con https://')
+
+const ligaOpcional = liga.optional().or(z.literal(''))
+
 export const esquemaPerfil = z.object({
   titular: z.string().trim().max(120).optional().or(z.literal('')),
   resumen: z.string().trim().max(1500).optional().or(z.literal('')),
@@ -44,8 +57,10 @@ export const esquemaPerfil = z.object({
   // sin custodiar dónde vive la gente.
   codigoPostal: z.string().trim().regex(/^\d{5}$|^$/, 'El código postal son 5 dígitos.').optional().or(z.literal('')),
   habilidades: z.string().trim().max(500).optional().or(z.literal('')),
-  ligaPortafolio: z.string().trim().url('Esa liga no se ve bien.').max(300).optional().or(z.literal('')),
-  ligaVideo: z.string().trim().url('Esa liga no se ve bien.').max(300).optional().or(z.literal('')),
+  ligaPortafolio: ligaOpcional,
+  ligaVideo: ligaOpcional,
+  linkedin: ligaOpcional,
+  cvUrl: ligaOpcional,
   disponibilidad: z.string().trim().max(200).optional().or(z.literal('')),
 })
 
@@ -79,6 +94,19 @@ export const esquemaSolicitud = z.object({
   empresa: z.string().trim().max(160).optional().or(z.literal('')),
   mensaje: z.string().trim().min(1, 'Cuéntanos qué necesitas.').max(2000),
   origen: z.string().trim().max(120),
+  sitioWeb: z.string().optional(),
+})
+
+export const esquemaRegistroEmpresa = z.object({
+  empresa: z.string().trim().min(2, 'Hace falta el nombre de la empresa.').max(160),
+  sitio: ligaOpcional,
+  ubicacion: z.string().trim().min(2, 'Hace falta la ciudad.').max(160),
+  descripcion: z.string().trim().max(1000).optional().or(z.literal('')),
+  nombre,
+  puesto: z.string().trim().max(120).optional().or(z.literal('')),
+  correo,
+  telefono,
+  password: esquemaRegistro.shape.password,
   sitioWeb: z.string().optional(),
 })
 

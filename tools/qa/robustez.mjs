@@ -91,5 +91,27 @@ ok(bloqueada?.headers.get('retry-after') !== null, 'y se le dice cuántos segund
 const cuerpo429 = bloqueada ? await bloqueada.json() : {}
 ok(/espera|inténtalo/i.test(cuerpo429.error ?? ''), 'con un mensaje entendible, no un código pelón')
 
+// --- tope en entrar: once intentos seguidos desde la misma IP ---
+// Va SIN el pase a propósito: es la única forma de saber que el tope existe.
+// Abre navegador: entrar es una acción de servidor, no un endpoint JSON.
+{
+  const { chromium } = await import('playwright')
+  const nav = await chromium.launch()
+  const p = await nav.newPage()
+  let bloqueado = false
+  for (let i = 0; i < 11 && !bloqueado; i++) {
+    await p.goto(`${B}/entrar`)
+    await p.fill('input[name=email]', `fuerza.${i}@qa.aiuto.test`)
+    await p.fill('input[name=password]', 'equivocada123')
+    await p.click('button[type=submit]')
+    // `form [role=alert]` y no `[role=alert]`: Next pinta su anunciador de rutas
+    // con ese rol y vacío, y el selector suelto lo encuentra antes que al mensaje.
+    await p.waitForSelector('form [role=alert]')
+    if (/Demasiados intentos/.test(await p.textContent('form [role=alert]'))) bloqueado = true
+  }
+  ok(bloqueado, 'entrar: a los once intentos se corta')
+  await nav.close()
+}
+
 console.log(`\n${fallos === 0 ? 'TODO VERDE' : fallos + ' FALLAS'}`)
 process.exit(fallos === 0 ? 0 : 1)

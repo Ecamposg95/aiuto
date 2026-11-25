@@ -36,18 +36,27 @@ export type ResultadoLimite = { permitido: boolean; restantes: number; esperaSeg
  * Exige el mismo secreto que la tarea programada: quien lo tiene ya podía
  * cerrar vacantes, asi que no abre nada nuevo.
  */
-function traeElPase(peticion: Request): boolean {
+export function traeElPaseEn(h: Headers): boolean {
   const secreto = process.env.TAREAS_SECRET
   if (!secreto) return false
-  return peticion.headers.get('x-aiuto-pase') === secreto
+  return h.get('x-aiuto-pase') === secreto
 }
 
+function traeElPase(peticion: Request): boolean {
+  return traeElPaseEn(peticion.headers)
+}
+
+/**
+ * `pase` es para las acciones de servidor, que no tienen un Request: leen las
+ * cabeceras con `headers()` y pasan aquí el resultado de `traeElPaseEn`.
+ */
 export function dentroDelLimite(
   clave: string,
   opciones: { maximo: number; ventanaSegundos: number },
   peticion?: Request,
+  pase = false,
 ): ResultadoLimite {
-  if (peticion && traeElPase(peticion)) {
+  if (pase || (peticion && traeElPase(peticion))) {
     return { permitido: true, restantes: opciones.maximo, esperaSegundos: 0 }
   }
 
@@ -76,9 +85,13 @@ export function dentroDelLimite(
  * contra el abuso accidental y el robot perezoso. Lo que sí protege de verdad
  * son las restricciones de la base y la validación.
  */
+export function origenDeCabeceras(h: Headers): string {
+  const reenviada = h.get('x-forwarded-for')
+  return reenviada?.split(',')[0]?.trim() || h.get('x-real-ip') || 'desconocido'
+}
+
 export function origenDe(peticion: Request): string {
-  const reenviada = peticion.headers.get('x-forwarded-for')
-  return reenviada?.split(',')[0]?.trim() || peticion.headers.get('x-real-ip') || 'desconocido'
+  return origenDeCabeceras(peticion.headers)
 }
 
 /** Respuesta estándar cuando alguien se pasa. */

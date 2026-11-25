@@ -18,6 +18,15 @@ const esperaTexto = (p, texto, ms = 40000) =>
   ).then(() => true).catch(() => false)
 
 const nav = await chromium.launch()
+
+// El pase del arnés en todas las páginas: entrar y registrarse tienen tope por
+// IP y esta suite entra varias veces. Sin TAREAS_SECRET la cabecera va vacía y
+// el servidor la ignora.
+const conPase = (o = {}) => ({ ...o, extraHTTPHeaders: { ...(o.extraHTTPHeaders ?? {}), 'x-aiuto-pase': process.env.TAREAS_SECRET ?? '' } })
+const _nuevoContexto = nav.newContext.bind(nav)
+const _nuevaPagina = nav.newPage.bind(nav)
+nav.newContext = (o) => _nuevoContexto(conPase(o))
+nav.newPage = (o) => _nuevaPagina(conPase(o))
 const p = await nav.newContext({ viewport: { width: 1440, height: 1000 } }).then(c => c.newPage())
 
 // 1. Sin sesion, el panel esta cerrado
@@ -57,6 +66,7 @@ const llenar = async (sueldoMax) => {
   await p.fill('input[name=ubicacion]', 'Manzanillo, Colima')
   await p.selectOption('select[name=modalidad]', 'HIBRIDO')
   await p.fill('textarea[name=descripcion]', 'Dirigir la planta y el equipo de turno.')
+  await p.fill('textarea[name=resultadosEsperados]', 'Cumplir el plan de producción con cero accidentes.')
   await p.fill('input[name=sueldoMin]', '50000')
   await p.fill('input[name=sueldoMax]', sueldoMax)
   await p.selectOption('select[name=seguroSocial]', 'COMPLETO')

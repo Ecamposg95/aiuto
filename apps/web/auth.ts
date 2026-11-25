@@ -38,8 +38,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!usuario || !usuario.passwordHash || !coincide) return null
 
-        // Entran los tres roles. Quien puede ver que, lo decide cada zona:
-        // /panel exige staff, /mi exige sesion a secas.
+        // Entran todos los roles. Quien puede ver qué lo decide cada zona:
+        // /panel exige staff, /reclutamiento exige empresa y /mi exige candidato.
         return { id: usuario.id, email: usuario.email, name: usuario.nombre, rol: usuario.rol }
       },
     }),
@@ -70,7 +70,14 @@ export function esStaff(rol: string | undefined): boolean {
   return ROLES_STAFF.includes(rol as Rol)
 }
 
+/** ¿Esta sesión es de un reclutador de empresa? */
+export function esEmpresa(rol: string | undefined): boolean {
+  return rol === 'EMPRESA'
+}
+
 /** A dónde mandar a alguien después de entrar, según quién sea. */
 export function inicioSegunRol(rol: string | undefined): string {
-  return esStaff(rol) ? '/panel' : '/mi'
+  if (esStaff(rol)) return '/panel'
+  if (esEmpresa(rol)) return '/reclutamiento'
+  return '/mi'
 }

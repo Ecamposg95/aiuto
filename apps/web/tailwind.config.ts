@@ -13,7 +13,9 @@ const config: Config = {
   theme: {
     // Reemplazan la escala por defecto de Tailwind: sólo existe lo que el
     // sistema define.
-    borderRadius: { none: '0', DEFAULT: '0' },
+    // Bordes suaves en tarjetas y controles (máster prompt §3). Las reglas de
+    // 2 px siguen rectas: estructuran, no decoran.
+    borderRadius: { none: '0', DEFAULT: '0', control: '6px', tarjeta: '12px', full: '9999px' },
     colors: {
       transparent: 'transparent',
       current: 'currentColor',

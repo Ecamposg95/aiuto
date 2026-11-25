@@ -16,6 +16,8 @@ export function vacantePublica(ahora = new Date()): Prisma.VacanteWhereInput {
     estado: 'ABIERTA',
     publicadaEn: { not: null },
     OR: [{ expiraEn: null }, { expiraEn: { gt: ahora } }],
+    // Una empresa suspendida deja de recibir postulaciones en ese momento.
+    company: { estado: 'APROBADA' },
   }
 }
 
@@ -27,6 +29,10 @@ export type FiltrosBolsa = {
   /** Piso de sueldo mensual. Se compara contra el máximo de la vacante: quien
    *  pide 30,000 debe ver una vacante de 25,000 a 35,000. */
   desde?: number
+  /** Nombre de la empresa, parcial. */
+  empresa?: string
+  /** Ciudad o estado, parcial. */
+  ubicacion?: string
 }
 
 const MODALIDADES = ['PRESENCIAL', 'HIBRIDO', 'REMOTO']
@@ -53,6 +59,12 @@ export function filtrosDeBusqueda(f: FiltrosBolsa): Prisma.VacanteWhereInput {
   if (f.desde && f.desde > 0) {
     condiciones.push({ periodicidad: 'MENSUAL', sueldoMax: { gte: f.desde } })
   }
+
+  const empresa = f.empresa?.trim()
+  if (empresa) condiciones.push({ company: { nombre: { contains: empresa, mode: 'insensitive' } } })
+
+  const ubicacion = f.ubicacion?.trim()
+  if (ubicacion) condiciones.push({ ubicacion: { contains: ubicacion, mode: 'insensitive' } })
 
   const texto = f.q?.trim()
   if (texto) {
@@ -136,3 +148,24 @@ export async function sueldosPorCategoria() {
   })
   return categorias
 }
+
+/** Todo lo de una postulación para verla en detalle. El acceso lo revisa quien llama. */
+export async function postulacionDetalle(id: string) {
+  return prisma.postulacion.findUnique({
+    where: { id },
+    include: {
+      vacante: { include: { company: true, category: true } },
+      candidato: {
+        include: {
+          user: { select: { nombre: true, email: true } },
+          experiencias: { orderBy: { orden: 'asc' } },
+          formaciones: { orderBy: { orden: 'asc' } },
+          evidencias: { orderBy: { orden: 'asc' } },
+        },
+      },
+      mensajes: { orderBy: { creadoEn: 'asc' }, include: { autor: { select: { nombre: true } } } },
+    },
+  })
+}
+
+export type PostulacionDetalle = NonNullable<Awaited<ReturnType<typeof postulacionDetalle>>>

@@ -113,23 +113,28 @@
 
   /* Morado: el único color que invita a hacer clic. */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 border-rule border-purple
+    @apply inline-flex items-center justify-center gap-2 rounded-control border-rule border-purple
            bg-purple px-5 py-3 text-h4 text-white transition
            hover:border-purple-700 hover:bg-purple-700
            disabled:cursor-not-allowed disabled:border-disabled disabled:bg-disabled;
   }
 
   .btn-secundario {
-    @apply inline-flex items-center justify-center gap-2 border-rule border-ink
+    @apply inline-flex items-center justify-center gap-2 rounded-control border-rule border-ink
            bg-white px-5 py-3 text-h4 text-ink transition hover:bg-off;
   }
 
   .campo {
-    @apply w-full border-px border-field bg-white px-3 py-3 text-body
+    @apply w-full rounded-control border-px border-field bg-white px-3 py-3 text-body
            placeholder:text-disabled focus:border-purple focus:outline-none;
   }
 
   .campo-error {
     @apply border-operaciones;
+  }
+
+  /* Tarjeta: fondo claro, borde fino y esquinas suaves. */
+  .tarjeta {
+    @apply rounded-tarjeta border-px border-line bg-white p-5;
   }
 }

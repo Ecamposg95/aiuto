@@ -69,6 +69,9 @@ importers:
 
   packages/core:
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.4
       typescript:
         specifier: ^5.7.3
         version: 5.9.3

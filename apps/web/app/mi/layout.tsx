@@ -1,18 +1,22 @@
 import Link from 'next/link'
 import { exigirCandidato } from '@/lib/sesion'
+import { sinLeer } from '@/lib/notificaciones'
 import { SalirBoton } from '@/app/panel/SalirBoton'
 
 export const dynamic = 'force-dynamic'
 
-const SECCIONES = [
-  ['/mi', 'Mis postulaciones'],
-  ['/mi/perfil', 'Mi perfil'],
-  ['/bolsa', 'Buscar vacantes'],
-] as const
 
 export default async function MiLayout({ children }: { children: React.ReactNode }) {
   const usuario = await exigirCandidato()
   const nombre = usuario.nombre ?? usuario.email
+  const avisos = await sinLeer(usuario.id)
+  const SECCIONES = [
+    ['/mi', 'Mis postulaciones'],
+    ['/mi/perfil', 'Mi perfil'],
+    ['/mi/guardadas', 'Guardadas'],
+    ['/mi/avisos', avisos > 0 ? `Avisos (${avisos})` : 'Avisos'],
+    ['/bolsa', 'Buscar vacantes'],
+  ] as const
 
   return (
     <div className="wrap max-w-[78ch] py-6">

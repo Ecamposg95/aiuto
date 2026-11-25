@@ -188,6 +188,46 @@ export function correoAcuseSolicitud(datos: { nombre: string }): Correo {
   })
 }
 
+// ---------------------------------------------------------------- cuenta
+
+export function correoRestablecer(datos: { nombre?: string | null; liga: string }): Correo {
+  return armar({
+    asunto: 'Cambia tu contraseña · AIUTO',
+    saludo: datos.nombre ? `Hola, ${datos.nombre}` : 'Hola',
+    parrafos: [
+      'Alguien pidió cambiar la contraseña de tu cuenta en AIUTO. Si fuiste tú, usa esta liga. Sirve una sola vez y dura una hora.',
+    ],
+    liga: { texto: 'Elegir una contraseña nueva', url: datos.liga },
+    cierre: 'Si no lo pediste, ignora este correo: tu contraseña sigue igual.',
+  })
+}
+
+export function correoVerificar(datos: { nombre?: string | null; liga: string }): Correo {
+  return armar({
+    asunto: 'Confirma tu correo · AIUTO',
+    saludo: datos.nombre ? `Hola, ${datos.nombre}` : 'Hola',
+    parrafos: [
+      'Confirma que este correo es tuyo. En cuanto lo hagas, verás en tu cuenta las postulaciones que hayas hecho con él, también las de antes de registrarte.',
+    ],
+    liga: { texto: 'Confirmar mi correo', url: datos.liga },
+    cierre: 'Si no creaste una cuenta en AIUTO, ignora este correo.',
+  })
+}
+
+/**
+ * Aviso de que hay algo nuevo dentro de AIUTO. A propósito sin el contenido:
+ * las comunicaciones de reclutamiento se quedan en la plataforma (máster
+ * prompt §19) y el correo sólo invita a entrar.
+ */
+export function correoHayAlgoNuevo(datos: { nombre?: string | null; titulo: string; liga: string }): Correo {
+  return armar({
+    asunto: `${datos.titulo} · AIUTO`,
+    saludo: datos.nombre ? `Hola, ${datos.nombre}` : 'Hola',
+    parrafos: [`${datos.titulo}. Entra a AIUTO para verlo.`],
+    liga: { texto: 'Verlo en AIUTO', url: datos.liga },
+  })
+}
+
 const NIVELES: Record<NivelCandidato, string> = {
   ESTUDIANTE: 'estudiante o recién egresado',
   EXPERIMENTADO: 'persona con experiencia',
@@ -197,17 +237,18 @@ const NIVELES: Record<NivelCandidato, string> = {
 export function correoAcuseAsesoria(datos: {
   nombre: string
   nivel: NivelCandidato
-  precio: number
-  moneda: string
+  precio?: number | null
+  moneda?: string
 }): Correo {
-  const precio = `$${datos.precio.toLocaleString('es-MX')} ${datos.moneda}`
+  const costo =
+    datos.precio != null ? `, con un costo de $${datos.precio.toLocaleString('es-MX')} ${datos.moneda ?? 'MXN'}` : ''
   return armar({
     asunto: 'Recibimos tu solicitud de asesoría · AIUTO',
     saludo: `Hola, ${datos.nombre}`,
     parrafos: [
-      `Recibimos tu solicitud de asesoría de empleabilidad, en la modalidad de ${NIVELES[datos.nivel]}, con un costo de ${precio}.`,
-      'La dirección de AIUTO se pone en contacto contigo para acordar cómo empezamos.',
-      'No se te ha cobrado nada: el pago se acuerda directamente con nosotros.',
+      `Recibimos tu solicitud de asesoría de empleabilidad, como ${NIVELES[datos.nivel]}${costo}.`,
+      'La dirección de AIUTO se pone en contacto contigo para platicar tu caso y explicarte cómo trabajamos.',
+      'No se te ha cobrado nada: las condiciones se acuerdan directamente con nosotros.',
     ],
   })
 }

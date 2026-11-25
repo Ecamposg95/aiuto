@@ -2,46 +2,27 @@
  * Semilla. Idempotente: se puede correr cuantas veces haga falta.
  *
  * Las siete categorías son la única semilla fija del sistema y salen de
- * `sitio/categorias.json`, que es la fuente que ya usa la landing. Se leen de ahí
- * en vez de copiarlas para que no se desincronicen.
+ * `packages/core/src/soluciones.ts`, la misma fuente de las páginas públicas.
+ * Se leen de ahí en vez de copiarlas para que no se desincronicen.
  */
-import { readFile } from 'node:fs/promises'
-import { fileURLToPath } from 'node:url'
-import { dirname, resolve } from 'node:path'
 import { PrismaClient } from '../generated/client/index.js'
+import { VERTICALES } from '../../core/src/soluciones.js'
 
 const prisma = new PrismaClient()
-const aqui = dirname(fileURLToPath(import.meta.url))
-const CATEGORIAS = resolve(aqui, '../../../sitio/categorias.json')
-
-type CategoriaLanding = {
-  slug: string
-  name: string
-  short: string
-  color: string
-  dark: string
-  tint: string
-  desc: string
-}
 
 async function main() {
-  const crudo = await readFile(CATEGORIAS, 'utf8')
-  const categorias = JSON.parse(crudo) as CategoriaLanding[]
-
-  if (categorias.length !== 7) {
-    throw new Error(
-      `Se esperaban 7 categorías en sitio/categorias.json y vinieron ${categorias.length}.`,
-    )
+  if (VERTICALES.length !== 7) {
+    throw new Error(`Se esperaban 7 categorías y vinieron ${VERTICALES.length}.`)
   }
 
-  for (const [i, c] of categorias.entries()) {
+  for (const [i, c] of VERTICALES.entries()) {
     const datos = {
-      nombre: c.name,
-      corto: c.short,
-      descripcion: c.desc,
+      nombre: c.nombre,
+      corto: c.corto,
+      descripcion: c.lema,
       color: c.color,
-      colorDark: c.dark,
-      colorTint: c.tint,
+      colorDark: c.colorDark,
+      colorTint: c.colorTint,
       orden: i,
     }
     await prisma.category.upsert({
@@ -51,7 +32,7 @@ async function main() {
     })
   }
 
-  console.log(`Categorías sembradas: ${categorias.length}`)
+  console.log(`Categorías sembradas: ${VERTICALES.length}`)
 }
 
 main()

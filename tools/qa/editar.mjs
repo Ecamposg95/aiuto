@@ -7,6 +7,15 @@ const txt = (p, t, ms = 20000) => p.waitForFunction(
 ).then(() => true).catch(() => false)
 
 const nav = await chromium.launch()
+
+// El pase del arnés en todas las páginas: entrar y registrarse tienen tope por
+// IP y esta suite entra varias veces. Sin TAREAS_SECRET la cabecera va vacía y
+// el servidor la ignora.
+const conPase = (o = {}) => ({ ...o, extraHTTPHeaders: { ...(o.extraHTTPHeaders ?? {}), 'x-aiuto-pase': process.env.TAREAS_SECRET ?? '' } })
+const _nuevoContexto = nav.newContext.bind(nav)
+const _nuevaPagina = nav.newPage.bind(nav)
+nav.newContext = (o) => _nuevoContexto(conPase(o))
+nav.newPage = (o) => _nuevaPagina(conPase(o))
 const p = await nav.newPage({ viewport: { width: 1440, height: 1200 } })
 await p.goto(`${B}/entrar`, { waitUntil: 'load' })
 await p.fill('input[name=email]', 'admin@qa.aiuto.test')

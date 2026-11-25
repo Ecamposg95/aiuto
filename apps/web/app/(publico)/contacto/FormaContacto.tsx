@@ -8,9 +8,12 @@ type Falla = { campo: string; mensaje: string }
 export function FormaContacto({
   categorias,
   categoriaInicial,
+  origen = 'contacto',
 }: {
   categorias: Categoria[]
   categoriaInicial?: string
+  /** Qué página generó la solicitud: alimenta el indicador de servicios más consultados. */
+  origen?: string
 }) {
   const [enviando, setEnviando] = useState(false)
   const [fallas, setFallas] = useState<Falla[]>([])
@@ -29,7 +32,7 @@ export function FormaContacto({
     const r = await fetch('/api/solicitudes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...datos, origen: 'contacto' }),
+      body: JSON.stringify({ ...datos, origen }),
     }).catch(() => null)
 
     setEnviando(false)

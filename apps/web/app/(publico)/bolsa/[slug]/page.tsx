@@ -14,6 +14,8 @@ import {
 import { vacantePorSlug, vacantePublica } from '@/lib/consultas'
 import { basePublica } from '@/lib/correo'
 import { FormaPostulacion } from './FormaPostulacion'
+import { auth } from '@/auth'
+import { alternarGuardada } from '@/lib/guardadas'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +55,17 @@ export default async function DetalleVacante({ params }: { params: Promise<{ slu
   )
 
   const dias = diasRestantes(vacante.expiraEn, new Date())
+
+  // Guardar es para candidatos con cuenta.
+  const sesion = await auth()
+  const guardada =
+    sesion?.user?.rol === 'CANDIDATO'
+      ? Boolean(
+          await prisma.vacanteGuardada.findFirst({
+            where: { vacanteId: vacante.id, perfil: { userId: sesion.user.id } },
+          }),
+        )
+      : null
 
   const estructurado = jobPosting({
     puesto: vacante.puesto,
@@ -112,7 +125,7 @@ export default async function DetalleVacante({ params }: { params: Promise<{ slu
         </Link>
         {dias !== null && (
           <span
-            className={`cifras text-sm ${dias <= 14 ? 'font-semibold text-operaciones' : 'text-neutral'}`}
+            className={`cifras text-sm ${dias <= 7 ? 'font-semibold text-operaciones' : 'text-neutral'}`}
           >
             {dias === 0 ? 'Vence hoy' : `Quedan ${dias} días para postularte`}
           </span>
@@ -135,6 +148,7 @@ export default async function DetalleVacante({ params }: { params: Promise<{ slu
           {/* El sueldo va primero y grande: es lo que nadie más publica. */}
           <section className="border-y-rule border-ink py-6">
             <p className="cifras text-metric">{formatearSueldo(vacante)}</p>
+            {vacante.sueldoNeto && <p className="mt-1 text-ink-2">Neto: lo que recibes después de impuestos.</p>}
             {mercado.suficiente && (
               <p className="mt-3 max-w-[52ch] text-ink-2">
                 {medioDeEsta >= mercado.mediana
@@ -166,11 +180,29 @@ export default async function DetalleVacante({ params }: { params: Promise<{ slu
             </p>
           </section>
 
+          {vacante.resultadosEsperados && (
+            <section className="mt-7">
+              <h2 className="text-h3 border-b-rule border-ink pb-2">Qué se espera que logres</h2>
+              <p className="mt-4 max-w-[68ch] whitespace-pre-line text-ink-2">{vacante.resultadosEsperados}</p>
+            </section>
+          )}
+
+          {vacante.requisitos.length > 0 && (
+            <section className="mt-7">
+              <h2 className="text-h3 border-b-rule border-ink pb-2">Requisitos indispensables</h2>
+              <ul className="mt-4 list-disc pl-5 text-ink-2">
+                {vacante.requisitos.map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section className="mt-7">
             <h2 className="text-h3 border-b-rule border-ink pb-2">Qué necesitas saber</h2>
             <ul className="mt-4 flex flex-wrap gap-2">
               {vacante.conocimientos.map((c) => (
-                <li key={c} className="border-px border-line px-3 py-1.5 text-sm">
+                <li key={c} className="border-px border-line px-3 py-[6px] text-sm">
                   {c}
                 </li>
               ))}
@@ -179,7 +211,20 @@ export default async function DetalleVacante({ params }: { params: Promise<{ slu
         </div>
 
         <div className="lg:sticky lg:top-5">
+          {vacante.instrucciones && (
+            <p className="mb-4 border-px border-line bg-off p-3 text-sm text-ink-2">
+              <strong className="text-ink">Cómo postularte:</strong> {vacante.instrucciones}
+            </p>
+          )}
           <FormaPostulacion vacanteSlug={vacante.slug} />
+          {guardada !== null && (
+            <form action={alternarGuardada} className="mt-3">
+              <input type="hidden" name="vacanteId" value={vacante.id} />
+              <button className="btn-secundario w-full">
+                {guardada ? 'Quitar de mis guardadas' : 'Guardar para después'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

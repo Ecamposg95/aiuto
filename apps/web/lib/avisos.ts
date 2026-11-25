@@ -147,8 +147,8 @@ export async function avisarAsesoriaNueva(datos: {
   correo: string
   telefono?: string | null
   nivel: NivelCandidato
-  precio: number
-  moneda: string
+  precio?: number | null
+  moneda?: string
 }) {
   await enviarCorreo(
     correoAcuseAsesoria({
@@ -166,7 +166,7 @@ export async function avisarAsesoriaNueva(datos: {
   await enviarCorreo(
     correoAvisoEquipo({
       titulo: 'Nueva solicitud de asesoría',
-      detalle: `$${datos.precio.toLocaleString('es-MX')} ${datos.moneda}`,
+      detalle: datos.precio != null ? `$${datos.precio.toLocaleString('es-MX')} ${datos.moneda ?? 'MXN'}` : datos.nombre,
       campos: [
         ['Nombre', datos.nombre],
         ['Correo', datos.correo],

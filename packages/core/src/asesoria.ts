@@ -35,3 +35,11 @@ export function nivelesConPrecio(): { nivel: NivelCandidato; precio: number; eti
     etiqueta: ETIQUETAS[nivel],
   }))
 }
+
+/**
+ * Los niveles sin precio, para el formulario público. Los precios no se
+ * publican mientras dirección no los autorice (máster prompt §7.1).
+ */
+export function nivelesAsesoria(): { nivel: NivelCandidato; etiqueta: string }[] {
+  return (Object.keys(ETIQUETAS) as NivelCandidato[]).map((nivel) => ({ nivel, etiqueta: ETIQUETAS[nivel] }))
+}

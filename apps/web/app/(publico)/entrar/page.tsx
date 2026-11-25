@@ -10,7 +10,12 @@ import { FormaEntrar } from './FormaEntrar'
 export const metadata: Metadata = { title: 'Entrar', robots: { index: false, follow: false } }
 export const dynamic = 'force-dynamic'
 
-export default async function Entrar() {
+export default async function Entrar({
+  searchParams,
+}: {
+  searchParams: Promise<{ cambiada?: string }>
+}) {
+  const { cambiada } = await searchParams
   const sesion = await auth()
   if (sesion?.user) redirect(inicioSegunRol(sesion.user.rol))
 
@@ -22,12 +27,24 @@ export default async function Entrar() {
 
   return (
     <div className="wrap py-8">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-12">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-8">
         <div>
           <h1 className="text-h1">Entrar</h1>
           <p className="mt-3 text-ink-2">Con tu cuenta ves en qué va cada postulación tuya.</p>
 
+          {cambiada === '1' && (
+            <p role="status" className="mt-5 border-px border-capital-humano bg-capital-humano-tint p-3 text-sm">
+              Listo. Entra con tu contraseña nueva.
+            </p>
+          )}
+
           <FormaEntrar />
+
+          <p className="mt-4 text-sm">
+            <Link href="/recuperar" className="text-purple underline">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </p>
 
           <p className="mt-5 text-sm text-ink-2">
             ¿No tienes cuenta?{' '}
@@ -39,7 +56,7 @@ export default async function Entrar() {
         </div>
 
         {/* En vez de decoración, lo que hay hoy del otro lado de la puerta. */}
-        <aside className="border-t-rule border-ink pt-6 lg:border-l-rule lg:border-t-0 lg:pl-10 lg:pt-0">
+        <aside className="border-t-rule border-ink pt-6 lg:border-l-rule lg:border-t-0 lg:pl-7 lg:pt-0">
           <p className="text-h3">Mientras tanto, esto es lo que hay abierto</p>
 
           <dl className="mt-6">

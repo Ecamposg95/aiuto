@@ -24,6 +24,9 @@ const EJEMPLO: Record<string, string> = {
   conocimientos: 'Lean Manufacturing, SMED, Seguridad industrial',
   numEntrevistas: '2',
   diasCierreEsperado: '30',
+  resultadosEsperados: 'Que la planta cumpla el plan de producción con cero accidentes y baje el desperdicio 10 % en el primer año.',
+  requisitos: 'Cinco años dirigiendo planta de manufactura\nDisponibilidad para vivir en Manzanillo',
+  instrucciones: 'Postúlate con tu CV actualizado; la primera entrevista es en línea.',
 }
 
 export function FormaVacante({
@@ -31,8 +34,11 @@ export function FormaVacante({
   vacanteId,
   valoresIniciales,
   modoQA = false,
+  empresaFija,
 }: {
   categorias: Categoria[]
+  /** Para el panel de empresa: la empresa no se elige, es la suya. */
+  empresaFija?: string
   /** Presente sólo al editar. */
   vacanteId?: string
   valoresIniciales?: Record<string, string>
@@ -92,14 +98,26 @@ export function FormaVacante({
         </button>
       )}
 
-      {fallas.length > 0 && (
+      {falla('publicar') ? (
         <p role="alert" className="border-rule border-operaciones bg-operaciones-tint p-4 text-sm">
-          Faltan {fallas.length} {fallas.length === 1 ? 'dato' : 'datos'}. Están marcados abajo.
+          {falla('publicar')}
         </p>
+      ) : (
+        fallas.length > 0 && (
+          <p role="alert" className="border-rule border-operaciones bg-operaciones-tint p-4 text-sm">
+            Faltan {fallas.length} {fallas.length === 1 ? 'dato' : 'datos'}. Están marcados abajo.
+          </p>
+        )
       )}
 
       <Bloque titulo="Quién y qué">
-        <Campo etiqueta="Empresa" nombre="empresa" falla={falla('empresa')} requerido  valor={valor('empresa')}/>
+        {empresaFija ? (
+          <p className="text-ink-2">
+            Se publica a nombre de <strong className="text-ink">{empresaFija}</strong>.
+          </p>
+        ) : (
+          <Campo etiqueta="Empresa" nombre="empresa" falla={falla('empresa')} requerido valor={valor('empresa')} />
+        )}
         <Selector etiqueta="Categoría" nombre="categoryId" falla={falla('categoryId')} valor={valor('categoryId')}>
           <option value="">Elige una…</option>
           {categorias.map((c) => (
@@ -116,6 +134,29 @@ export function FormaVacante({
           <option value="REMOTO">Remoto</option>
         </Selector>
         <Area etiqueta="Descripción del puesto" nombre="descripcion" falla={falla('descripcion')}  valor={valor('descripcion')}/>
+        <Area
+          etiqueta="Qué tiene que lograr"
+          nombre="resultadosEsperados"
+          falla={falla('resultadosEsperados')}
+          filas={3}
+          ayuda="Los resultados que esperan de quien entre. Es lo que más ayuda a decidir si postularse."
+          valor={valor('resultadosEsperados')}
+        />
+        <Area
+          etiqueta="Requisitos indispensables"
+          nombre="requisitos"
+          falla={falla('requisitos')}
+          filas={3}
+          ayuda="Uno por renglón. Sólo lo que de verdad descarta a alguien."
+          valor={valor('requisitos')}
+        />
+        <Area
+          etiqueta="Instrucciones para postularse (opcional)"
+          nombre="instrucciones"
+          falla={falla('instrucciones')}
+          filas={2}
+          valor={valor('instrucciones')}
+        />
       </Bloque>
 
       <Bloque
@@ -133,6 +174,10 @@ export function FormaVacante({
             ayuda="Si el sueldo es fijo, repite el mínimo."
            valor={valor('sueldoMax')}/>
         </div>
+        <label className="flex items-center gap-3">
+          <input type="checkbox" name="sueldoNeto" value="si" defaultChecked={valor('sueldoNeto') === 'si'} className="h-5 w-5" />
+          <span>El sueldo publicado es neto (lo que se recibe después de impuestos)</span>
+        </label>
         <Selector etiqueta="Periodicidad" nombre="periodicidad" falla={falla('periodicidad')} valor={valor('periodicidad')}>
           <option value="MENSUAL">Mensual</option>
           <option value="QUINCENAL">Quincenal</option>
@@ -178,7 +223,7 @@ export function FormaVacante({
             nombre="diasCierreEsperado"
             tipo="number"
             falla={falla('diasCierreEsperado')}
-            ayuda="Máximo 60: es lo que vive una vacante."
+            ayuda="Máximo 60. La vacante vive 30 días y sólo excepcionalmente se amplía a 60."
             requerido
            valor={valor('diasCierreEsperado')}/>
         </div>
@@ -208,8 +253,8 @@ export function FormaVacante({
       </div>
       <p className="mt-3 text-sm text-neutral">
         {editando
-          ? 'Editar no reinicia el plazo: el reloj de los 60 días sigue corriendo desde que se publicó.'
-          : 'Al publicar, la vacante vive 60 días y después se cierra sola.'}
+          ? 'Editar no reinicia el plazo: el reloj de la vigencia sigue corriendo desde que se publicó.'
+          : 'Al publicar, la vacante vive 30 días y después se cierra sola.'}
       </p>
     </form>
   )
@@ -298,15 +343,17 @@ function Area({
   falla,
   filas = 5,
   valor,
+  ayuda,
 }: {
   etiqueta: string
   nombre: string
   falla?: string
   filas?: number
   valor?: string
+  ayuda?: string
 }) {
   return (
-    <Etiqueta etiqueta={etiqueta} falla={falla} nombre={nombre}>
+    <Etiqueta etiqueta={etiqueta} falla={falla} ayuda={ayuda} nombre={nombre}>
       <textarea
         name={nombre}
         rows={filas}

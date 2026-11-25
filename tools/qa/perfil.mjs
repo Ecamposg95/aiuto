@@ -4,6 +4,15 @@ let fallos = 0
 const ok = (c, e, d = '') => { console.log(`${c ? '  ok  ' : ' FALLA'} ${e}${d ? ' — ' + d : ''}`); if (!c) fallos++ }
 
 const nav = await chromium.launch()
+
+// El pase del arnés en todas las páginas: entrar y registrarse tienen tope por
+// IP y esta suite entra varias veces. Sin TAREAS_SECRET la cabecera va vacía y
+// el servidor la ignora.
+const conPase = (o = {}) => ({ ...o, extraHTTPHeaders: { ...(o.extraHTTPHeaders ?? {}), 'x-aiuto-pase': process.env.TAREAS_SECRET ?? '' } })
+const _nuevoContexto = nav.newContext.bind(nav)
+const _nuevaPagina = nav.newPage.bind(nav)
+nav.newContext = (o) => _nuevoContexto(conPase(o))
+nav.newPage = (o) => _nuevaPagina(conPase(o))
 const p = await nav.newPage({ viewport: { width: 1280, height: 800 } })
 await p.goto(`${B}/entrar`, { waitUntil: 'load' })
 await p.fill('input[name=email]', 'egresado@qa.aiuto.test')
@@ -19,11 +28,17 @@ ok(await p.locator('text=Cuando hay prisa por agendar').count() > 0, 'y explica 
 // Que un campo pase por detrás de una barra fija al desplazar es normal. Lo que
 // importa es que SIEMPRE se pueda ver: al llegar abajo, el último campo tiene
 // que quedar completo por encima de la barra.
-await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+// Hasta el final del formulario principal, no de la página: debajo vienen la
+// trayectoria y las evidencias.
+await p.evaluate(() => {
+  const forma = document.querySelector('form[aria-label="Mi perfil"]')
+  window.scrollTo(0, forma.getBoundingClientRect().bottom + window.scrollY - window.innerHeight)
+})
 await p.waitForTimeout(500)
 const abajo = await p.evaluate(() => {
-  const barra = document.querySelector('form .sticky').getBoundingClientRect()
-  const campos = [...document.querySelectorAll('form input, form textarea, form select')]
+  const forma = document.querySelector('form[aria-label="Mi perfil"]')
+  const barra = forma.querySelector('.sticky').getBoundingClientRect()
+  const campos = [...forma.querySelectorAll('input:not([type=hidden]), textarea, select')]
   const ultimo = campos.at(-1).getBoundingClientRect()
   return { libre: ultimo.bottom <= barra.top, hueco: Math.round(barra.top - ultimo.bottom) }
 })

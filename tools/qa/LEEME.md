@@ -26,12 +26,14 @@ LD_LIBRARY_PATH=<dir>/usr/lib/x86_64-linux-gnu node tools/qa/panel.mjs
 | --- | --- | --- |
 | `bolsa.mjs` | Listado, filtros, detalle, postulación, estado por liga | no |
 | `formularios.mjs` | Asesoría, contacto, aviso de privacidad, cierre automático | no |
-| `robustez.mjs` | Búsqueda, datos estructurados, sitemap, robots, 404, topes | no |
+| `robustez.mjs` | Búsqueda, datos estructurados, sitemap, robots, 404, topes (el de entrar abre navegador) | sí |
 | `sueldos.mjs` | Rangos por categoría y páginas de empresa | no |
 | `panel.mjs` | Entrar, capturar y publicar una vacante, permisos | sí |
 | `candidato.mjs` | Registro, perfil, historial, postular sin cuenta | sí |
 | `editar.mjs` | Editar vacante y el relleno de ejemplo de QA | sí |
 | `perfil.mjs` | Lo que falta en el perfil y la barra de guardado | sí |
+| `recuperar.mjs` | Recuperar contraseña y confirmar el correo (sólo local: lee la base) | sí |
+| `ecosistema.mjs` | Empresas con cuenta, mensajes, alertas, alta de empresa, WhatsApp (sólo local) | sí |
 | `landing.mjs` | La landing estática escribiendo contra la API | sí |
 
 ## Dos cosas que hay que saber

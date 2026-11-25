@@ -3,6 +3,8 @@ import { loQueFalta } from '@aiuto/core'
 import { prisma } from '@aiuto/db'
 import { exigirCandidato } from '@/lib/sesion'
 import { FormaPerfil } from './FormaPerfil'
+import { Trayectoria } from './Trayectoria'
+import { Guias } from './Guias'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,8 +21,7 @@ export default async function MiPerfil() {
     <>
       <h1 className="text-h2">Mi perfil</h1>
       <p className="mt-3 max-w-[58ch] text-ink-2">
-        Pocos campos, a propósito. Con esto basta para postularte; lo demás se platica si
-        avanzas.
+        Ve llenándolo a tu ritmo: todo se guarda por partes. Con lo básico ya puedes postularte.
       </p>
 
       {perfil.rosterPreferencial && (
@@ -58,6 +59,8 @@ export default async function MiPerfil() {
         </p>
       )}
 
+      <Guias />
+
       <FormaPerfil
         perfil={{
           titular: perfil.titular,
@@ -69,10 +72,14 @@ export default async function MiPerfil() {
           habilidades: perfil.habilidades,
           ligaPortafolio: perfil.ligaPortafolio,
           ligaVideo: perfil.ligaVideo,
+          linkedin: perfil.linkedin,
+          cvUrl: perfil.cvUrl,
+          consentimiento: Boolean(perfil.consentimientoEmpresasEn),
           disponibilidad: perfil.disponibilidad,
           rosterPreferencial: perfil.rosterPreferencial,
         }}
       />
+      <Trayectoria perfilId={perfil.id} />
     </>
   )
 }

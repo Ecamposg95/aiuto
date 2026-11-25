@@ -55,13 +55,21 @@ export async function guardarPerfil(previo: EstadoPerfil, datos: FormData): Prom
       .filter(Boolean),
     ligaPortafolio: d.ligaPortafolio || null,
     ligaVideo: d.ligaVideo || null,
+    linkedin: d.linkedin || null,
+    cvUrl: d.cvUrl || null,
     disponibilidad: d.disponibilidad || null,
   }
 
+  // El consentimiento guarda cuándo se dio; quitarlo lo borra. Si ya estaba
+  // dado, se conserva la fecha original.
+  const actual = await prisma.candidateProfile.findUnique({ where: { userId }, select: { consentimientoEmpresasEn: true } })
+  const consentimientoEmpresasEn =
+    crudo.consentimiento === 'si' ? (actual?.consentimientoEmpresasEn ?? new Date()) : null
+
   await prisma.candidateProfile.upsert({
     where: { userId },
-    create: { userId, ...campos },
-    update: campos,
+    create: { userId, ...campos, consentimientoEmpresasEn },
+    update: { ...campos, consentimientoEmpresasEn },
   })
 
   return { guardado: true, valores: crudo, intento }

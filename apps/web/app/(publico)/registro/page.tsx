@@ -32,7 +32,7 @@ export default async function Registro() {
 
   return (
     <div className="wrap py-8">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-12">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-8">
         <div>
           <h1 className="text-h1">Crear cuenta</h1>
           <p className="mt-3 text-ink-2">Toma un minuto y no pedimos nada más que esto.</p>
@@ -52,7 +52,7 @@ export default async function Registro() {
           </p>
         </div>
 
-        <aside className="border-t-rule border-ink pt-6 lg:border-l-rule lg:border-t-0 lg:pl-10 lg:pt-0">
+        <aside className="border-t-rule border-ink pt-6 lg:border-l-rule lg:border-t-0 lg:pl-7 lg:pt-0">
           <p className="text-h3">Para qué te sirve</p>
           <dl className="mt-6">
             {SIRVE_PARA.map(([que, detalle]) => (

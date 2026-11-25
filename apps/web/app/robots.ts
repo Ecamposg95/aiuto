@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
       // Nada de esto tiene por qué indexarse: el panel es privado, las ligas de
       // postulación son secretas, y /entrar y /registro no aportan nada en
       // resultados de búsqueda.
-      disallow: ['/panel', '/mi', '/api', '/postulacion', '/entrar', '/registro'],
+      disallow: ['/panel', '/reclutamiento', '/mi', '/api', '/postulacion', '/entrar', '/registro', '/recuperar', '/verificar'],
     },
     sitemap: `${basePublica()}/sitemap.xml`,
   }

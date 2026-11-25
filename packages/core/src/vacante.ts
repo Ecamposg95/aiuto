@@ -8,8 +8,12 @@
  */
 import type { Falla, Modalidad, Periodicidad, Resultado, SeguroSocial } from './tipos.js'
 
-/** Ninguna vacante vive más de dos meses. */
-export const DIAS_VIGENCIA_VACANTE = 60
+/**
+ * Vigencia ordinaria: 30 días. Excepcionalmente se amplía una vez, hasta 60
+ * contados desde la publicación (máster prompt §7.1). Ninguna vive más de eso.
+ */
+export const DIAS_VIGENCIA_VACANTE = 30
+export const DIAS_VIGENCIA_MAXIMA = 60
 
 /** Tope de entrevistas que se considera un proceso razonable, no una odisea. */
 export const MAX_ENTREVISTAS = 10
@@ -79,21 +83,43 @@ export function validarVacante(datos: DatosVacante): Resultado<DatosVacante> {
 
   if (!entero(datos.diasCierreEsperado) || datos.diasCierreEsperado < 1) {
     falla('diasCierreEsperado', 'Hay que estimar en cuántos días se cierra la vacante.')
-  } else if (datos.diasCierreEsperado > DIAS_VIGENCIA_VACANTE) {
+  } else if (datos.diasCierreEsperado > DIAS_VIGENCIA_MAXIMA) {
     falla(
       'diasCierreEsperado',
-      `El plazo no puede exceder los ${DIAS_VIGENCIA_VACANTE} días de vigencia de la vacante.`,
+      `El plazo no puede exceder los ${DIAS_VIGENCIA_MAXIMA} días que puede vivir una vacante.`,
     )
   }
 
   return fallas.length === 0 ? { ok: true, valor: datos } : { ok: false, fallas }
 }
 
+function masDias(fecha: Date, dias: number): Date {
+  const r = new Date(fecha.getTime())
+  r.setUTCDate(r.getUTCDate() + dias)
+  return r
+}
+
 /** Toda vacante nace con fecha de muerte. */
 export function calcularExpiracion(publicadaEn: Date): Date {
-  const expira = new Date(publicadaEn.getTime())
-  expira.setUTCDate(expira.getUTCDate() + DIAS_VIGENCIA_VACANTE)
-  return expira
+  return masDias(publicadaEn, DIAS_VIGENCIA_VACANTE)
+}
+
+/**
+ * La ampliación excepcional: una sola vez, a 60 días desde la publicación.
+ * Devuelve la nueva fecha o el motivo por el que no se puede.
+ */
+export function ampliarVigencia(vacante: {
+  estado: string
+  publicadaEn: Date | null
+  ampliadaEn: Date | null
+}): { ok: true; expiraEn: Date } | { ok: false; motivo: string } {
+  if (vacante.estado !== 'ABIERTA' || !vacante.publicadaEn) {
+    return { ok: false, motivo: 'Sólo se amplía una vacante abierta.' }
+  }
+  if (vacante.ampliadaEn) {
+    return { ok: false, motivo: `Ya se amplió una vez: ninguna vacante vive más de ${DIAS_VIGENCIA_MAXIMA} días.` }
+  }
+  return { ok: true, expiraEn: masDias(vacante.publicadaEn, DIAS_VIGENCIA_MAXIMA) }
 }
 
 /**

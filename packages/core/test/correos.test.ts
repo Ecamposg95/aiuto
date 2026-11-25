@@ -6,6 +6,9 @@ import {
   correoAcuseSolicitud,
   correoAcuseAsesoria,
   ESTADOS_QUE_AVISAN,
+  correoRestablecer,
+  correoVerificar,
+  correoHayAlgoNuevo,
 } from '../src/correos.js'
 
 const VACANTE = {
@@ -97,6 +100,12 @@ describe('acuses de solicitudes', () => {
     expect(c.texto).not.toMatch(/24 horas|48 horas/)
   })
 
+  it('sin precio publicado, el acuse no menciona costo', () => {
+    const c = correoAcuseAsesoria({ nombre: 'Iris', nivel: 'ESTUDIANTE' })
+    expect(c.texto).not.toMatch(/\$/)
+    expect(c.texto).toMatch(/no se te ha cobrado nada/i)
+  })
+
   it('el de asesoría repite el precio que la persona vio', () => {
     const c = correoAcuseAsesoria({ nombre: 'Iris', nivel: 'ESTUDIANTE', precio: 2500, moneda: 'MXN' })
     expect(c.texto).toContain('$2,500 MXN')
@@ -128,5 +137,41 @@ describe('todos los correos', () => {
 
   it('firman como AIUTO', () => {
     for (const c of todos) expect(c.texto).toContain('AIUTO')
+  })
+})
+
+describe('recuperar la contraseña', () => {
+  const liga = 'https://aiuto-web-production.up.railway.app/recuperar/abc'
+  const c = correoRestablecer({ nombre: 'Ana', liga })
+
+  it('trae la liga en las dos versiones', () => {
+    expect(c.texto).toContain(liga)
+    expect(c.html).toContain(liga)
+  })
+
+  it('dice cuánto dura y qué hacer si no lo pidió', () => {
+    expect(c.texto).toContain('una hora')
+    expect(c.texto).toMatch(/no lo pediste/i)
+  })
+
+  it('funciona sin nombre', () => {
+    expect(correoRestablecer({ liga }).texto.startsWith('Hola,')).toBe(true)
+  })
+})
+
+describe('verificar el correo', () => {
+  const c = correoVerificar({ nombre: 'Ana', liga: 'https://x/verificar/abc' })
+
+  it('explica para qué sirve verificar', () => {
+    expect(c.texto).toMatch(/postulaciones/)
+  })
+})
+
+describe('aviso de algo nuevo', () => {
+  const c = correoHayAlgoNuevo({ nombre: 'Ana', titulo: 'Tienes un mensaje de Aceros', liga: 'https://x/mi' })
+
+  it('invita a entrar sin traer el contenido', () => {
+    expect(c.asunto).toContain('Tienes un mensaje de Aceros')
+    expect(c.texto).toContain('https://x/mi')
   })
 })

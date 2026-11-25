@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import type { NivelCandidato } from '@aiuto/core'
 
-type Nivel = { nivel: NivelCandidato; precio: number; etiqueta: string }
+type Nivel = { nivel: NivelCandidato; etiqueta: string }
 type Falla = { campo: string; mensaje: string }
 
 export function FormaAsesoria({ niveles }: { niveles: Nivel[] }) {
@@ -13,7 +13,6 @@ export function FormaAsesoria({ niveles }: { niveles: Nivel[] }) {
   const [error, setError] = useState<string | null>(null)
   const [listo, setListo] = useState(false)
 
-  const precio = niveles.find((n) => n.nivel === elegido)?.precio
   const fallaDe = (campo: string) => fallas.find((f) => f.campo === campo)?.mensaje
 
   async function enviar(e: React.FormEvent<HTMLFormElement>) {
@@ -55,7 +54,7 @@ export function FormaAsesoria({ niveles }: { niveles: Nivel[] }) {
       <fieldset className="border-0 p-0">
         <legend className="label">¿En qué momento estás?</legend>
         <p className="mt-2 text-sm text-ink-2">
-          Lo único que cambia entre los tres es el precio.
+          Nos ayuda a preparar la primera sesión.
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           {niveles.map((n) => (
@@ -73,9 +72,7 @@ export function FormaAsesoria({ niveles }: { niveles: Nivel[] }) {
                 onChange={() => setElegido(n.nivel)}
                 className="sr-only"
               />
-              <span className="label block">{n.etiqueta}</span>
-              <span className="mt-2 block text-h2">{`$${n.precio.toLocaleString('es-MX')}`}</span>
-              <span className="text-sm text-neutral">MXN</span>
+              <span className="text-h4 block">{n.etiqueta}</span>
             </label>
           ))}
         </div>
@@ -83,10 +80,10 @@ export function FormaAsesoria({ niveles }: { niveles: Nivel[] }) {
 
       {elegido && (
         <form onSubmit={enviar} noValidate className="mt-6 border-rule border-ink p-5">
-          <p className="text-h4">{`Asesoría por $${precio?.toLocaleString('es-MX')} MXN`}</p>
+          <p className="text-h4">Solicitar la asesoría</p>
           <p className="mt-2 text-sm text-ink-2">
-            Déjanos tus datos y te contactamos. El pago se acuerda por fuera; este formulario no
-            cobra nada.
+            Déjanos tus datos y te contactamos para platicar tu caso. Este formulario no cobra
+            nada: las condiciones se acuerdan directamente con nosotros.
           </p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">

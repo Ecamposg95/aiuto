@@ -14,23 +14,35 @@ export function BuscadorBolsa({
   actual,
 }: {
   categorias: Categoria[]
-  actual: { q?: string; categoria?: string; modalidad?: string; desde?: string }
+  actual: { q?: string; categoria?: string; modalidad?: string; desde?: string; empresa?: string; ubicacion?: string }
 }) {
-  const hayFiltro = Boolean(actual.q || actual.categoria || actual.modalidad || actual.desde)
+  const hayFiltro = Boolean(
+    actual.q || actual.categoria || actual.modalidad || actual.desde || actual.empresa || actual.ubicacion,
+  )
 
   return (
     <div className="mt-6">
       <form method="get" action="/bolsa" className="border-rule border-ink p-4">
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr_1fr_auto] lg:items-end">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto] lg:items-end">
           <label className="block">
             <span className="label block">Qué buscas</span>
             <input
               type="search"
               name="q"
               defaultValue={actual.q ?? ''}
-              placeholder="Puesto, empresa, ciudad o habilidad"
+              placeholder="Puesto o habilidad"
               className="campo mt-2"
             />
+          </label>
+
+          <label className="block">
+            <span className="label block">Empresa</span>
+            <input type="search" name="empresa" defaultValue={actual.empresa ?? ''} className="campo mt-2" />
+          </label>
+
+          <label className="block">
+            <span className="label block">Ubicación</span>
+            <input type="search" name="ubicacion" defaultValue={actual.ubicacion ?? ''} placeholder="Ciudad o estado" className="campo mt-2" />
           </label>
 
           <label className="block">

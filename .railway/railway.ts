@@ -42,6 +42,8 @@ export default defineRailway(() => {
       NODE_ENV: preserve(),
       PORT: preserve(),
       TAREAS_SECRET: preserve(),
+      // Número de WhatsApp de Damián (sólo dígitos, con lada). Sin él, el botón no se pinta.
+      WHATSAPP_NUMERO: preserve(),
     },
   });
   return project("AIUTO", {

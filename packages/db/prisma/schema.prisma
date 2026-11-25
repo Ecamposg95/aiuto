@@ -25,6 +25,31 @@ enum Rol {
   CANDIDATO
   STAFF_ADMIN
   STAFF_OPERADOR
+  EMPRESA // reclutador de una empresa con cuenta; ve sólo lo de su empresa
+}
+
+enum EstadoEmpresa {
+  PENDIENTE  // se registró sola y espera la aprobación del administrador
+  APROBADA
+  SUSPENDIDA
+  RECHAZADA
+}
+
+enum EstadoLicencia {
+  ACTIVA
+  SUSPENDIDA
+}
+
+enum TipoAlerta {
+  // Tres días hábiles desde la primera postulación sin que la empresa
+  // contacte a nadie (máster prompt §11).
+  EMPRESA_SIN_CONTACTO
+}
+
+enum EstadoAlerta {
+  ABIERTA
+  ATENDIDA
+  DESCARTADA
 }
 
 enum NivelCandidato {
@@ -119,6 +144,10 @@ model User {
   solicitudesACargo  Solicitud[]
   asesoriasSolicitadas SolicitudAsesoria[]
   acciones           AuditLog[]
+  membresia          CompanyMember?
+  mensajes           Mensaje[]
+  notificaciones     Notificacion[]
+  alertasAtendidas   Alerta[]
 
   @@index([rol])
 }
@@ -198,6 +227,7 @@ model CandidateProfile {
   codigoPostal String?
 
   habilidades    String[] @default([])
+  linkedin       String?
   ligaPortafolio String?
   ligaVideo      String? // el pitch en video se aloja fuera por ahora
   cvUrl          String?
@@ -207,7 +237,16 @@ model CandidateProfile {
   rosterPreferencial Boolean   @default(false)
   validadoEn         DateTime?
 
-  categorias Category[]
+  // Consentimiento explícito para que las empresas a las que se postula vean
+  // su CV, su pitch y sus evidencias (máster prompt §15). Sin él, la empresa
+  // ve sólo lo que la persona escribió en la postulación.
+  consentimientoEmpresasEn DateTime?
+
+  categorias  Category[]
+  experiencias Experiencia[]
+  formaciones  Formacion[]
+  evidencias   Evidencia[]
+  guardadas    VacanteGuardada[]
 
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
@@ -216,6 +255,56 @@ model CandidateProfile {
 
   @@index([nivel])
   @@index([rosterPreferencial])
+}
+
+// Trayectoria: tres a cinco logros por experiencia (máster prompt §8.2).
+model Experiencia {
+  id       String           @id @default(cuid())
+  perfilId String
+  perfil   CandidateProfile @relation(fields: [perfilId], references: [id], onDelete: Cascade)
+  puesto   String
+  empresa  String
+  // Texto libre ("mar 2021", "actual"): la gente no recuerda el día exacto.
+  desde    String?
+  hasta    String?
+  logros   String[]         @default([])
+  orden    Int              @default(0)
+
+  @@index([perfilId])
+}
+
+model Formacion {
+  id          String           @id @default(cuid())
+  perfilId    String
+  perfil      CandidateProfile @relation(fields: [perfilId], references: [id], onDelete: Cascade)
+  titulo      String
+  institucion String
+  anio        Int?
+  orden       Int              @default(0)
+
+  @@index([perfilId])
+}
+
+// Evidencias de competencias: repositorios, tableros, diseños (máster prompt §8.3).
+model Evidencia {
+  id       String           @id @default(cuid())
+  perfilId String
+  perfil   CandidateProfile @relation(fields: [perfilId], references: [id], onDelete: Cascade)
+  titulo   String
+  url      String
+  orden    Int              @default(0)
+
+  @@index([perfilId])
+}
+
+model VacanteGuardada {
+  perfilId  String
+  perfil    CandidateProfile @relation(fields: [perfilId], references: [id], onDelete: Cascade)
+  vacanteId String
+  vacante   Vacante          @relation(fields: [vacanteId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime         @default(now())
+
+  @@id([perfilId, vacanteId])
 }
 
 // ---------------------------------------------------------------- empresa
@@ -227,15 +316,57 @@ model Company {
   sitio     String?
   ubicacion String?
   logoUrl   String?
+  descripcion String?
 
-  // En la Fase 1 las empresas no tienen cuenta: las da de alta el equipo AIUTO.
+  // Las que da de alta el equipo nacen aprobadas; las que se registran solas
+  // nacen PENDIENTE y no publican hasta que el administrador las aprueba.
+  estado         EstadoEmpresa @default(APROBADA)
+  contactoNombre String?
+  contactoCorreo String?
+  contactoTel    String?
+
   verificada  Boolean @default(false)
   creadoPorId String?
   creadoPor   User?   @relation(fields: [creadoPorId], references: [id], onDelete: SetNull)
 
   creadoEn DateTime @default(now())
 
-  vacantes Vacante[]
+  vacantes  Vacante[]
+  miembros  CompanyMember[]
+  licencias Licencia[]
+  alertas   Alerta[]
+
+  @@index([estado])
+}
+
+// Un usuario EMPRESA pertenece a una sola empresa.
+model CompanyMember {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  puesto    String?
+  creadoEn  DateTime @default(now())
+
+  @@index([companyId])
+}
+
+// Licencia empresarial configurable (máster prompt §7.1). Sin precios a
+// propósito: las tarifas no están autorizadas. Lo que limita es cuántas
+// vacantes puede tener abiertas y hasta cuándo.
+model Licencia {
+  id              String         @id @default(cuid())
+  companyId       String
+  company         Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  vacantesActivas Int
+  iniciaEn        DateTime       @default(now())
+  terminaEn       DateTime?
+  estado          EstadoLicencia @default(ACTIVA)
+  notaInterna     String?
+  creadoEn        DateTime       @default(now())
+
+  @@index([companyId, estado])
 }
 
 // ---------------------------------------------------------------- vacante
@@ -268,6 +399,13 @@ model Vacante {
 
   conocimientos String[]
 
+  // Lo que el máster prompt §7.1 pide además. Opcionales en la columna para no
+  // invalidar las vacantes que ya existen; el formulario los pide.
+  resultadosEsperados String? // el "Job to Be Done": qué tiene que lograr quien entre
+  requisitos          String[] @default([]) // indispensables, a diferencia de conocimientos
+  instrucciones       String? // cómo postularse, si hay algo además de "Aplicar"
+  sueldoNeto          Boolean  @default(false) // el sueldo publicado es neto (después de impuestos)
+
   numEntrevistas     Int // cuántas entrevistas tiene el proceso
   diasCierreEsperado Int // en cuántos días espera cerrar la empresa
 
@@ -275,8 +413,10 @@ model Vacante {
 
   estado      EstadoVacante @default(BORRADOR)
   publicadaEn DateTime?
-  // Toda vacante nace con fecha de expiración. Sin vacantes vivas de más de 60 días.
+  // Toda vacante nace con fecha de expiración: 30 días, ampliable una vez hasta
+  // 60 contados desde la publicación (máster prompt §7.1).
   expiraEn    DateTime?
+  ampliadaEn  DateTime?
   cerradaEn   DateTime?
 
   creadoPorId String?
@@ -286,6 +426,8 @@ model Vacante {
   actualizadoEn DateTime @updatedAt
 
   postulaciones Postulacion[]
+  guardadas     VacanteGuardada[]
+  alertas       Alerta[]
 
   @@index([estado, publicadaEn])
   @@index([categoryId])
@@ -313,6 +455,13 @@ model Postulacion {
   estado      EstadoPostulacion @default(RECIBIDA)
   notaInterna String?
 
+  // Contacto efectivo de la empresa: su primer mensaje dentro de AIUTO, o
+  // cuando registra que contactó por otra vía. Es lo que apaga la alerta de
+  // inactividad (máster prompt §11).
+  contactadaEn DateTime?
+
+  mensajes Mensaje[]
+
   // Token para consultar el estado sin cuenta, desde la liga del correo.
   tokenConsulta String @unique @default(cuid())
 
@@ -323,6 +472,62 @@ model Postulacion {
   @@unique([vacanteId, correo])
   @@index([estado])
   @@index([candidateProfileId])
+}
+
+// ---------------------------------------------------------------- mensajes
+
+// La conversación vive en la postulación: una por persona y vacante, y la
+// empresa sólo puede escribir a quien se postuló a sus vacantes.
+model Mensaje {
+  id            String      @id @default(cuid())
+  postulacionId String
+  postulacion   Postulacion @relation(fields: [postulacionId], references: [id], onDelete: Cascade)
+  autorId       String?
+  autor         User?       @relation(fields: [autorId], references: [id], onDelete: SetNull)
+  deEmpresa     Boolean
+  texto         String
+  leidoEn       DateTime?
+  creadoEn      DateTime    @default(now())
+
+  @@index([postulacionId, creadoEn])
+}
+
+// Avisos dentro de la plataforma. Las notificaciones de reclutamiento se quedan
+// en AIUTO (máster prompt §19); el correo sólo avisa que hay algo nuevo.
+model Notificacion {
+  id       String    @id @default(cuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titulo   String
+  cuerpo   String?
+  liga     String?
+  leidaEn  DateTime?
+  creadoEn DateTime  @default(now())
+
+  @@index([userId, leidaEn])
+}
+
+// Alertas para el panel maestro. Una por tipo y vacante: si ya hay una, la
+// tarea diaria la actualiza en vez de duplicarla.
+model Alerta {
+  id                   String       @id @default(cuid())
+  tipo                 TipoAlerta
+  vacanteId            String
+  vacante              Vacante      @relation(fields: [vacanteId], references: [id], onDelete: Cascade)
+  companyId            String
+  company              Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  primeraPostulacionEn DateTime
+  postulados           Int
+  estado               EstadoAlerta @default(ABIERTA)
+  nota                 String?
+  atendidaEn           DateTime?
+  atendidaPorId        String?
+  atendidaPor          User?        @relation(fields: [atendidaPorId], references: [id], onDelete: SetNull)
+  creadoEn             DateTime     @default(now())
+  actualizadoEn        DateTime     @updatedAt
+
+  @@unique([tipo, vacanteId])
+  @@index([estado, creadoEn])
 }
 
 // ---------------------------------------------------------------- solicitudes
@@ -367,7 +572,9 @@ model SolicitudAsesoria {
   nivel NivelCandidato
   // El precio se congela al momento de solicitar: si mañana suben las tarifas,
   // lo que se le ofreció a esta persona sigue siendo lo que vio.
-  precioMostrado Int
+  // Sin precio publicado (máster prompt §7.1): queda nulo. Se conserva la
+  // columna para las solicitudes que sí vieron uno.
+  precioMostrado Int?
   moneda         String @default("MXN")
 
   estado      EstadoAsesoria @default(NUEVA)

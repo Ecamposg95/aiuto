@@ -1,5 +1,6 @@
 import { Prisma, prisma } from '@aiuto/db'
 import { auth } from '@/auth'
+import { notificar, miembrosDe } from '@/lib/notificaciones'
 import { esquemaPostulacion } from '@/lib/esquemas'
 import { vacantePublica } from '@/lib/consultas'
 import { avisarPostulacionNueva } from '@/lib/avisos'
@@ -46,6 +47,7 @@ export async function POST(peticion: Request) {
     where: { slug: datos.vacanteSlug, ...vacantePublica() },
     select: {
       id: true,
+      companyId: true,
       puesto: true,
       sueldoMin: true,
       sueldoMax: true,
@@ -93,7 +95,7 @@ export async function POST(peticion: Request) {
         telefono: datos.telefono || null,
         mensaje: datos.mensaje || null,
       },
-      select: { tokenConsulta: true },
+      select: { id: true, tokenConsulta: true },
     })
 
     // Se avisa despues de guardar, y sin poder tumbar la respuesta: perder un
@@ -104,6 +106,12 @@ export async function POST(peticion: Request) {
       telefono: datos.telefono,
       token: postulacion.tokenConsulta,
       vacante,
+    })
+    // A la empresa con cuenta, dentro de su panel.
+    await notificar(await miembrosDe(vacante.companyId), {
+      titulo: `Nueva postulación para ${vacante.puesto}`,
+      cuerpo: datos.nombre,
+      ruta: `/reclutamiento/postulaciones/${postulacion.id}`,
     })
 
     return Response.json({ ok: true, token: postulacion.tokenConsulta }, { status: 201 })

@@ -1,5 +1,4 @@
 import { prisma } from '@aiuto/db'
-import { precioAsesoria, MONEDA_ASESORIA } from '@aiuto/core'
 import { esquemaAsesoria } from '@/lib/esquemas'
 import { avisarAsesoriaNueva } from '@/lib/avisos'
 
@@ -37,8 +36,6 @@ export async function POST(peticion: Request) {
   if (datos.sitioWeb) return Response.json({ ok: true }, { status: 201 })
 
   try {
-    const precio = precioAsesoria(datos.nivel)
-
     await prisma.solicitudAsesoria.create({
       data: {
         nombre: datos.nombre,
@@ -46,10 +43,9 @@ export async function POST(peticion: Request) {
         telefono: datos.telefono || null,
         mensaje: datos.mensaje || null,
         nivel: datos.nivel,
-        // El precio se congela aquí: si mañana suben las tarifas, a esta persona
-        // se le sostiene lo que vio.
-        precioMostrado: precio,
-        moneda: MONEDA_ASESORIA,
+        // Sin precio: no hay tarifas autorizadas para publicar (máster prompt
+        // §7.1). La columna queda para cuando las haya.
+        precioMostrado: null,
       },
     })
 
@@ -58,8 +54,6 @@ export async function POST(peticion: Request) {
       correo: datos.correo,
       telefono: datos.telefono,
       nivel: datos.nivel,
-      precio,
-      moneda: MONEDA_ASESORIA,
     })
 
     return Response.json({ ok: true }, { status: 201 })

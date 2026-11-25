@@ -3,13 +3,14 @@ import { prisma, type EstadoPostulacion } from '@aiuto/db'
 import { formatearSueldo, esEstadoFinal } from '@aiuto/core'
 import { exigirCandidato } from '@/lib/sesion'
 import { Avance } from './Avance'
+import { AvisoVerificar } from './AvisoVerificar'
 
 export const dynamic = 'force-dynamic'
 
 /** El mismo texto que ve quien consulta por liga: una sola verdad. */
 const ESTADOS: Record<EstadoPostulacion, string> = {
   RECIBIDA: 'Todavía no la revisamos. En cuanto lo hagamos, esto cambia.',
-  EN_REVISION: 'Alguien de AIUTO ya tiene tu perfil en las manos.',
+  EN_REVISION: 'La empresa ya tiene tu perfil en las manos.',
   ENTREVISTA: 'Nos vamos a poner en contacto contigo para agendarla.',
   CONTRATADA: 'Felicidades. Gracias por confiarnos tu búsqueda.',
   RECHAZADA: 'No avanzamos con tu postulación para esta vacante.',
@@ -18,10 +19,20 @@ const ESTADOS: Record<EstadoPostulacion, string> = {
 
 export default async function MisPostulaciones() {
   const { email: correo } = await exigirCandidato()
+  const usuario = await prisma.user.findUnique({ where: { email: correo }, select: { emailVerified: true } })
+  const verificado = Boolean(usuario?.emailVerified)
+  const aviso = verificado ? null : <AvisoVerificar correo={correo} />
 
   const postulaciones = await prisma.postulacion.findMany({
-    where: { OR: [{ correo }, { candidato: { user: { email: correo } } }] },
-    include: { vacante: { include: { company: true, category: true } } },
+    // Por correo, sólo si el correo está verificado: si no, cualquiera podría
+    // registrarse con el correo de otra persona y ver a dónde se postuló.
+    where: verificado
+      ? { OR: [{ correo }, { candidato: { user: { email: correo } } }] }
+      : { candidato: { user: { email: correo } } },
+    include: {
+      vacante: { include: { company: true, category: true } },
+      _count: { select: { mensajes: { where: { deEmpresa: true, leidoEn: null } } } },
+    },
     orderBy: { creadoEn: 'desc' },
   })
 
@@ -31,6 +42,7 @@ export default async function MisPostulaciones() {
   if (postulaciones.length === 0) {
     return (
       <>
+        {aviso}
         <h1 className="text-h2">Todavía no te has postulado</h1>
         <p className="mt-4 max-w-[58ch] text-lead text-ink-2">
           Cuando lo hagas, aquí vas a ver en qué va cada una sin tener que preguntarle a nadie.
@@ -44,6 +56,7 @@ export default async function MisPostulaciones() {
 
   return (
     <>
+      {aviso}
       <h1 className="text-h2">
         {abiertas.length === 0
           ? 'Ninguna sigue abierta'
@@ -70,7 +83,20 @@ export default async function MisPostulaciones() {
               {p.vacante.category.corto}
             </span>
 
-            <h2 className="mt-3 text-h3">{p.vacante.puesto}</h2>
+            <h2 className="mt-3 text-h3">
+              {p.candidateProfileId ? (
+                <Link href={`/mi/postulaciones/${p.id}`} className="hover:text-purple hover:underline">
+                  {p.vacante.puesto}
+                </Link>
+              ) : (
+                p.vacante.puesto
+              )}
+            </h2>
+            {p._count.mensajes > 0 && (
+              <Link href={`/mi/postulaciones/${p.id}`} className="mt-1 inline-block font-semibold text-purple underline">
+                {p._count.mensajes === 1 ? 'Tienes un mensaje nuevo' : `Tienes ${p._count.mensajes} mensajes nuevos`}
+              </Link>
+            )}
             <p className="mt-1 text-ink-2">
               {p.vacante.company.nombre}, {p.vacante.ubicacion}
             </p>

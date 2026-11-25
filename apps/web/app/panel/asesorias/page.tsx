@@ -33,7 +33,8 @@ export default async function PanelAsesorias() {
   })
 
   const vendidas = solicitudes.filter((s) => ['VENDIDA', 'EN_CURSO', 'COLOCADO'].includes(s.estado))
-  const porVender = vendidas.reduce((t, s) => t + s.precioMostrado, 0)
+  const conPrecio = vendidas.filter((s) => s.precioMostrado != null)
+  const porVender = conPrecio.reduce((t, s) => t + (s.precioMostrado ?? 0), 0)
   const fecha = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short' })
 
   return (
@@ -48,7 +49,10 @@ export default async function PanelAsesorias() {
         <div className="mt-5 grid border-t-rule border-ink sm:grid-cols-3">
           <Dato numero={String(solicitudes.filter((s) => s.estado === 'NUEVA').length)} que="sin contactar" />
           <Dato numero={String(vendidas.length)} que="vendidas o en curso" />
-          <Dato numero={`$${porVender.toLocaleString('es-MX')}`} que="comprometidos en MXN" />
+          {/* Sólo las que vieron un precio: las nuevas ya no lo traen. */}
+          {conPrecio.length > 0 && (
+            <Dato numero={`$${porVender.toLocaleString('es-MX')}`} que="comprometidos en MXN (con precio publicado)" />
+          )}
         </div>
       )}
 
@@ -81,9 +85,9 @@ export default async function PanelAsesorias() {
                     </p>
                   )}
                 </div>
-                <p className="cifras shrink-0 text-h2">
-                  {`$${s.precioMostrado.toLocaleString('es-MX')}`}
-                </p>
+                {s.precioMostrado != null && (
+                  <p className="cifras shrink-0 text-h2">{`$${s.precioMostrado.toLocaleString('es-MX')}`}</p>
+                )}
               </div>
             </li>
           ))}

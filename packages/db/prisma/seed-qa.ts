@@ -35,6 +35,16 @@ const USUARIOS = [
   { correo: `candidato${DOMINIO_QA}`, nombre: 'Carla Candidata (QA)', rol: 'CANDIDATO' },
   { correo: `egresado${DOMINIO_QA}`, nombre: 'Efrén Egresado (QA)', rol: 'CANDIDATO' },
   { correo: `gerente${DOMINIO_QA}`, nombre: 'Gina Gerente (QA)', rol: 'CANDIDATO' },
+  // Reclutadores de empresa con cuenta. Dos empresas distintas, para probar
+  // que una no ve lo de la otra.
+  { correo: `reclutador${DOMINIO_QA}`, nombre: 'Rita Reclutadora (QA)', rol: 'EMPRESA' },
+  { correo: `otra.empresa${DOMINIO_QA}`, nombre: 'Óscar Otra Empresa (QA)', rol: 'EMPRESA' },
+] as const
+
+/** Qué empresa de QA tiene cuenta y quién recluta en ella. */
+const MIEMBROS = [
+  { correo: `reclutador${DOMINIO_QA}`, empresa: 'nube-verde' },
+  { correo: `otra.empresa${DOMINIO_QA}`, empresa: 'metalurgica-bajio' },
 ] as const
 
 /** Perfiles de candidato, uno por nivel, para probar el filtrado y el roster. */
@@ -469,8 +479,13 @@ async function sembrar() {
       anosExperiencia: p.anosExperiencia,
       codigoPostal: p.codigoPostal,
       habilidades: [...p.habilidades],
+      // Se reinician: las suites los capturan y la siguiente corrida espera verlos vacíos.
+      telefono: null,
+      resumen: null,
       rosterPreferencial: p.rosterPreferencial,
       validadoEn: p.rosterPreferencial ? hace(20) : null,
+      // Carla autoriza que las empresas vean su perfil; los demás, no.
+      consentimientoEmpresasEn: p.correo === `candidato${DOMINIO_QA}` ? hace(30) : null,
     } satisfies Prisma.CandidateProfileUpdateInput
 
     await prisma.candidateProfile.upsert({
@@ -485,8 +500,21 @@ async function sembrar() {
     await prisma.company.upsert({
       where: { slug: e.slug },
       create: { ...e, verificada: true },
-      update: { nombre: e.nombre, ubicacion: e.ubicacion },
+      update: { nombre: e.nombre, ubicacion: e.ubicacion, estado: 'APROBADA' },
     })
+  }
+
+  // --- empresas con cuenta: membresía y licencia ---
+  for (const m of MIEMBROS) {
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: m.correo } })
+    const company = await prisma.company.findUniqueOrThrow({ where: { slug: `${MARCA}${m.empresa}` } })
+    await prisma.companyMember.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, companyId: company.id, puesto: 'Reclutamiento' },
+      update: { companyId: company.id },
+    })
+    await prisma.licencia.deleteMany({ where: { companyId: company.id } })
+    await prisma.licencia.create({ data: { companyId: company.id, vacantesActivas: 10, iniciaEn: hace(30) } })
   }
 
   // --- vacantes ---
@@ -499,6 +527,7 @@ async function sembrar() {
     const datos = {
       ...campos,
       conocimientos: [...campos.conocimientos],
+      resultadosEsperados: `Que quien ocupe el puesto de ${campos.puesto.toLowerCase()} cumpla las metas del área en sus primeros seis meses.`,
       companyId: company.id,
       categoryId,
       publicadaEn: publicadaHace === null ? null : hace(publicadaHace),

@@ -11,11 +11,11 @@ const archivo = Archivo({
 
 export const metadata: Metadata = {
   title: {
-    default: 'AIUTO — Bolsa de trabajo con sueldo a la vista',
+    default: 'AIUTO — El ecosistema que conecta necesidades con soluciones',
     template: '%s · AIUTO',
   },
   description:
-    'Vacantes que declaran sueldo, prestaciones, horario y cuántas entrevistas tiene el proceso. Y te decimos en qué va tu postulación.',
+    'Soluciones profesionales para empresas, bolsa de trabajo con sueldo a la vista y asesoría de empleabilidad, en un solo lugar.',
 }
 
 /**

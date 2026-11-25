@@ -10,6 +10,15 @@ const txt = (p, t, ms = 40000) =>
 
 const nav = await chromium.launch()
 
+// El pase del arnés en todas las páginas: entrar y registrarse tienen tope por
+// IP y esta suite entra varias veces. Sin TAREAS_SECRET la cabecera va vacía y
+// el servidor la ignora.
+const conPase = (o = {}) => ({ ...o, extraHTTPHeaders: { ...(o.extraHTTPHeaders ?? {}), 'x-aiuto-pase': process.env.TAREAS_SECRET ?? '' } })
+const _nuevoContexto = nav.newContext.bind(nav)
+const _nuevaPagina = nav.newPage.bind(nav)
+nav.newContext = (o) => _nuevoContexto(conPase(o))
+nav.newPage = (o) => _nuevaPagina(conPase(o))
+
 // ---------- 1. Candidato de QA entra y ve su historial ----------
 let ctx = await nav.newContext({ viewport: { width: 1440, height: 1100 } })
 let p = await ctx.newPage()
@@ -51,7 +60,7 @@ await p.reload({ waitUntil: 'load' })
 ok((await p.inputValue('input[name=titular]')) === 'Desarrolladora backend senior', 'el cambio persiste')
 await p.screenshot({ path: `${process.env.SALIDA}/mi-perfil.png`, fullPage: true })
 
-// ---------- 3. Registro nuevo que hereda su historial ----------
+// ---------- 3. Registro nuevo: su historial espera a que confirme el correo ----------
 const nuevo = `nuevo.${Date.now()}@qa.aiuto.test`
 const anon = await nav.newContext()
 const pa = await anon.newPage()
@@ -93,7 +102,11 @@ if (!llego) {
 }
 ok(llego, 'tras registrarse cae en su perfil')
 await pa.goto(`${BASE}/mi`, { waitUntil: 'load' })
-ok(await txt(pa, 'Soldador certificado'), 'encuentra la postulacion que hizo SIN cuenta')
+// Registrarse con un correo no prueba que sea de uno: lo postulado sin cuenta
+// aparece hasta confirmar el correo. Si no, cualquiera podría registrarse con
+// el correo de otra persona y ver a dónde se postuló.
+ok(await txt(pa, 'Confirma tu correo'), 'se le pide confirmar el correo')
+ok(!(await pa.content()).includes('Soldador certificado'), 'sin confirmarlo, no ve la postulacion hecha SIN cuenta')
 
 // Correo repetido
 const otro = await nav.newContext().then(c => c.newPage())

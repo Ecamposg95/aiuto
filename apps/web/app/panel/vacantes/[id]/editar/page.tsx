@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@aiuto/db'
 import { FormaVacante } from '../../nueva/FormaVacante'
+import { valoresDeVacante } from '@/lib/formularioVacante'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,24 +29,7 @@ export default async function EditarVacante({ params }: { params: Promise<{ id: 
         categorias={categorias}
         vacanteId={vacante.id}
         modoQA={process.env.MODO_QA === '1'}
-        valoresIniciales={{
-          empresa: vacante.company.nombre,
-          categoryId: vacante.categoryId,
-          puesto: vacante.puesto,
-          ubicacion: vacante.ubicacion,
-          modalidad: vacante.modalidad,
-          descripcion: vacante.descripcion,
-          sueldoMin: String(vacante.sueldoMin),
-          sueldoMax: String(vacante.sueldoMax),
-          periodicidad: vacante.periodicidad,
-          seguroSocial: vacante.seguroSocial,
-          seguroSocialPct: String(vacante.seguroSocialPct),
-          prestaciones: vacante.prestaciones,
-          horario: vacante.horario,
-          conocimientos: vacante.conocimientos.join(', '),
-          numEntrevistas: String(vacante.numEntrevistas),
-          diasCierreEsperado: String(vacante.diasCierreEsperado),
-        }}
+        valoresIniciales={valoresDeVacante(vacante)}
       />
     </>
   )

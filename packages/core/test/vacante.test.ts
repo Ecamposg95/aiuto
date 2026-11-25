@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
-  DIAS_VIGENCIA_VACANTE,
+  DIAS_VIGENCIA_MAXIMA,
+  ampliarVigencia,
   calcularExpiracion,
   estaVencida,
   validarVacante,
@@ -95,7 +96,7 @@ describe('validarVacante', () => {
     it('exige un plazo de cierre dentro de la vigencia de la vacante', () => {
       expect(validarVacante(vacanteValida({ diasCierreEsperado: 0 })).ok).toBe(false)
       expect(
-        validarVacante(vacanteValida({ diasCierreEsperado: DIAS_VIGENCIA_VACANTE + 1 })).ok,
+        validarVacante(vacanteValida({ diasCierreEsperado: DIAS_VIGENCIA_MAXIMA + 1 })).ok,
       ).toBe(false)
     })
 
@@ -119,10 +120,23 @@ describe('validarVacante', () => {
 })
 
 describe('vigencia', () => {
-  it('expira a los 60 días de publicada', () => {
+  it('expira a los 30 días de publicada', () => {
     const publicada = new Date('2026-01-01T12:00:00Z')
     const expira = calcularExpiracion(publicada)
-    expect(expira.toISOString()).toBe('2026-03-02T12:00:00.000Z')
+    expect(expira.toISOString()).toBe('2026-01-31T12:00:00.000Z')
+  })
+
+  it('se amplía una vez, a 60 días desde la publicación', () => {
+    const publicadaEn = new Date('2026-01-01T12:00:00Z')
+    const r = ampliarVigencia({ estado: 'ABIERTA', publicadaEn, ampliadaEn: null })
+    expect(r.ok && r.expiraEn.toISOString()).toBe('2026-03-02T12:00:00.000Z')
+  })
+
+  it('no se amplía dos veces ni si no está abierta', () => {
+    const publicadaEn = new Date('2026-01-01T12:00:00Z')
+    expect(ampliarVigencia({ estado: 'ABIERTA', publicadaEn, ampliadaEn: new Date() }).ok).toBe(false)
+    expect(ampliarVigencia({ estado: 'EXPIRADA', publicadaEn, ampliadaEn: null }).ok).toBe(false)
+    expect(ampliarVigencia({ estado: 'BORRADOR', publicadaEn: null, ampliadaEn: null }).ok).toBe(false)
   })
 
   it('no está vencida el día anterior al corte', () => {

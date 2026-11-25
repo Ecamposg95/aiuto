@@ -13,6 +13,9 @@ type Perfil = {
   habilidades: string[]
   ligaPortafolio: string | null
   ligaVideo: string | null
+  linkedin: string | null
+  cvUrl: string | null
+  consentimiento: boolean
   disponibilidad: string | null
   rosterPreferencial: boolean
 }
@@ -35,7 +38,7 @@ export function FormaPerfil({ perfil }: { perfil: Perfil }) {
   const llave = estado.intento ?? 0
 
   return (
-    <form action={accion} key={llave}>
+    <form action={accion} key={llave} aria-label="Mi perfil">
       {estado.guardado && !estado.fallas && (
         <p role="status" className="border-rule border-purple bg-purple-100 p-4">
           Guardado. Vuelve a cargar la página para ver qué te falta ahora.
@@ -120,14 +123,6 @@ export function FormaPerfil({ perfil }: { perfil: Perfil }) {
             ayuda="Opcional. Un perfil con muestras de trabajo se revisa distinto."
           />
           <Campo
-            etiqueta="Video de presentación"
-            nombre="ligaVideo"
-            tipo="url"
-            valor={valor('ligaVideo', perfil.ligaVideo ?? '')}
-            falla={falla('ligaVideo')}
-            ayuda="Opcional. Pégala de donde ya lo tengas alojado."
-          />
-          <Campo
             etiqueta="Disponibilidad"
             nombre="disponibilidad"
             valor={valor('disponibilidad', perfil.disponibilidad ?? '')}
@@ -137,10 +132,52 @@ export function FormaPerfil({ perfil }: { perfil: Perfil }) {
         </div>
       </section>
 
+      <section className="mt-7">
+        <h2 className="text-h3 border-b-rule border-ink pb-2">Tu CV, tu pitch y tu LinkedIn</h2>
+        <div className="mt-4 grid gap-4">
+          <Campo
+            etiqueta="Liga a tu CV"
+            nombre="cvUrl"
+            tipo="url"
+            valor={valor('cvUrl', perfil.cvUrl ?? '')}
+            falla={falla('cvUrl')}
+            ayuda="Súbelo a Google Drive o Dropbox como PDF, compártelo como «cualquiera con la liga» y pégala aquí."
+          />
+          <Campo
+            etiqueta="Video pitch"
+            nombre="ligaVideo"
+            tipo="url"
+            valor={valor('ligaVideo', perfil.ligaVideo ?? '')}
+            falla={falla('ligaVideo')}
+            ayuda="Un minuto, dos como máximo. Súbelo a YouTube (como «no listado»), Vimeo o Drive y pega la liga."
+          />
+          <Campo
+            etiqueta="LinkedIn"
+            nombre="linkedin"
+            tipo="url"
+            valor={valor('linkedin', perfil.linkedin ?? '')}
+            falla={falla('linkedin')}
+          />
+          <label className="flex items-start gap-3 border-px border-line p-3">
+            <input
+              type="checkbox"
+              name="consentimiento"
+              value="si"
+              defaultChecked={valor('consentimiento', perfil.consentimiento ? 'si' : '') === 'si'}
+              className="mt-1 h-5 w-5 shrink-0"
+            />
+            <span>
+              Autorizo que las empresas a cuyas vacantes me postule vean mi perfil, mi CV, mi video
+              pitch y mis evidencias. <span className="text-ink-2">Sin esto sólo ven lo que mandes al postularte. Puedes quitarlo cuando quieras.</span>
+            </span>
+          </label>
+        </div>
+      </section>
+
       {/* Colchón antes de la barra. Va aquí y no como padding del formulario:
           el padding del formulario queda POR DEBAJO de la barra y no despeja
           nada. Con esto el último campo puede subir por encima de ella. */}
-      <div aria-hidden className="h-20" />
+      <div aria-hidden className="h-[80px]" />
 
       {/* Barra de guardado fija: el formulario es largo y obligar a bajar hasta
           el final para guardar es trabajo extra. Lleva z-index para quedar por

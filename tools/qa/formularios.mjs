@@ -10,11 +10,14 @@ const post = (ruta, cuerpo, extra = {}) =>
 const sello = Date.now()
 
 // --- Asesoría ---
-let r = await fetch(`${BASE}/asesoria`)
+// /asesoria se volvió /empleabilidad y ya no publica precios (máster prompt §7.1 y §12).
+let r = await fetch(`${BASE}/asesoria`, { redirect: 'manual' })
+ok(r.status === 308 && (r.headers.get('location') ?? '').endsWith('/empleabilidad'), 'la liga vieja /asesoria lleva a /empleabilidad')
+r = await fetch(`${BASE}/empleabilidad`)
 let html = await r.text()
-ok(r.status === 200, 'GET /asesoria responde 200')
-ok(html.includes('$2,500') && html.includes('$3,500') && html.includes('$5,000'), 'muestra los tres precios')
-ok(html.includes('Roster preferencial'), 'menciona el roster preferencial')
+ok(r.status === 200, 'GET /empleabilidad responde 200')
+ok(!/\$\s?\d/.test(html.replace(/<script[\s\S]*?<\/script>/g, '')), 'no publica precios')
+ok(html.includes('dos sesiones remotas de una hora'), 'explica el servicio base: dos sesiones de una hora')
 
 r = await post('/api/asesorias', { nombre: 'Luz Pérez', correo: `ase.${sello}@ejemplo.mx`, nivel: 'GERENCIA' })
 ok(r.status === 201, 'POST asesoría responde 201', `status ${r.status}`)
