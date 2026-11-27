@@ -34,7 +34,9 @@ LD_LIBRARY_PATH=<dir>/usr/lib/x86_64-linux-gnu node tools/qa/panel.mjs
 | `perfil.mjs` | Lo que falta en el perfil y la barra de guardado | sí |
 | `recuperar.mjs` | Recuperar contraseña y confirmar el correo (sólo local: lee la base) | sí |
 | `ecosistema.mjs` | Empresas con cuenta, mensajes, alertas, alta de empresa, WhatsApp (sólo local) | sí |
+| `usuarios.mjs` | Cambiar rol y desactivar cuentas; efecto inmediato en la sesión abierta (sólo local) | sí |
 | `landing.mjs` | La landing estática escribiendo contra la API | sí |
+| `salida.mjs` | **Puerta de salida**: sin QA a la vista, aviso completo, cabeceras, WhatsApp real y en su lugar. No escribe nada; se corre contra producción | no |
 
 ## Dos cosas que hay que saber
 
@@ -44,10 +46,11 @@ que mandan la cabecera `x-aiuto-pase` con el valor de `TAREAS_SECRET`. La
 sección de `robustez.mjs` que comprueba el tope va SIN el pase a propósito: es la
 única forma de verificar que el límite existe de verdad.
 
-**Dejan rastro.** Crean postulaciones, solicitudes y alguna vacante. Hay que
-retirarlas después; los correos de prueba usan `@ejemplo.mx`, `@qa.aiuto.test` o
-prefijos como `nuevo.`, `lim.` y `pase.`, y la empresa de prueba del panel es
-`aceros-del-pacifico`.
+**Dejan rastro.** Crean postulaciones, solicitudes, empresas y alguna vacante.
+`pnpm db:seed:qa --revisar` cuenta lo que queda y `--limpiar` lo retira: correos
+`@qa.aiuto.test`, `@ejemplo.mx` y `x@y.mx`, y empresas `qa-`, `dev-` y
+`aceros-del-pacifico`. Si una suite nueva deja rastro con otro dominio o empresa,
+se agrega a `DOMINIOS_QA` / `EMPRESAS_QA` en `packages/db/prisma/seed-qa.ts`.
 
 **La URL va en `BASE`, nunca escrita a mano.** Dos veces se me coló una suite con
 `localhost` fijo que ignoraba el entorno, y reporté como verde contra producción

@@ -129,12 +129,34 @@ Hecho y probado (typecheck, 119 pruebas de `core` y 11 suites de `tools/qa` en v
   páginas (fuente: `core/soluciones.ts`), `/empleabilidad` sin precios (`/asesoria` redirige ahí),
   menú desplegable, logo, tarjetas con bordes suaves y WhatsApp solo donde lo permite el §13.
 
+El 25 se integró a `main` (`4e56a38`). Railway lo desplegó y aplicó la migración, pero el 26 a las
+13:59 (centro) el workspace rebasó su tope de gasto y Railway apagó la app. Ver
+`OPERACION.md` §7.
+
+## Avance del 27 de noviembre (rama `salida-produccion`, sin desplegar)
+
+- **Gestión de usuarios** en `/panel/usuarios`: cambiar el rol dentro del equipo y desactivar o
+  reactivar cuentas. Surte efecto en la sesión abierta (el callback `jwt` relee rol y estado).
+  Migración aditiva `20261127165611_usuarios_desactivados`. Suite `usuarios.mjs`.
+- **Tarea 1**, puerta de salida `tools/qa/salida.mjs`, adaptada al sitio unificado (WhatsApp real
+  y solo donde va, sin precios, sin enlaces en `#`, `DOMINIO` opcional).
+- **Tarea 7**: `pnpm db:seed:qa --revisar` y una limpieza que también retira lo que dejan las
+  suites y `seed-dev`.
+- **Tarea 8, en parte**: el aviso de privacidad ya cubre cuentas, perfil, empresas, mensajes,
+  consentimiento y la alerta de 3 días. Siguen 7 `[PENDIENTE]` que dependen de D1–D3.
+- **Tarea 9**: `.github/workflows/vigilar.yml`, cada 10 minutos.
+- **Tarea 15, el manual**: `docs/mvp/OPERACION.md`. Falta el ensayo de restauración.
+- **ARCO**: `pnpm arco <correo>` (acceso) y `--borrar --confirmo <correo>` (cancelación).
+
 Pendiente:
 
 - **Número de WhatsApp** (decisión 1): ponerlo en la variable `WHATSAPP_NUMERO` de Railway
   **antes** del siguiente `railway config apply`, porque `.railway/railway.ts` ya la declara.
-- **Mover `aiuto.com.mx`** de Hostinger a Railway y retirar `sitio/`. `docs/diseno` conserva el
-  logo sin rotar.
-- **Gestión de usuarios**: hoy es solo una lista; cambiar roles o desactivar cuentas sigue siendo a mano.
-- Lo que queda del plan de salida: tareas 7 a 16 (limpieza de QA, aviso de privacidad, correo,
-  respaldos y monitoreo).
+- **Mover `aiuto.com.mx`** de Hostinger a Railway y retirar `sitio/` (`OPERACION.md` §11).
+  `docs/diseno` conserva el logo sin rotar.
+- **Infraestructura (tarea 11)**: respaldos (PITR apagado y sin horarios), aviso suave de gasto,
+  quitar `MODO_QA`, rotar `AUTH_SECRET` y `TAREAS_SECRET`.
+- **Correo (tarea 12)**: Resend con dominio verificado. Al crear `EMAIL_API_KEY`, declararla en
+  `railway.ts`.
+- **Datos (tarea 13)**, el **ensayo de restauración (tarea 15)** y el **go / no-go (tarea 16)**.
+- **Insumos de Dirección**: D1–D3 (aviso), D6 (cuentas del equipo), D9 (vacantes reales).
