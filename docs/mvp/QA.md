@@ -5,12 +5,17 @@
 Todo lo que hay aquí lo siembra `pnpm db:seed:qa` y lo retira `pnpm db:seed:qa --limpiar`.
 **No son datos reales y no deben existir cuando abra la beta.**
 
+> **Antes de abrir:** `pnpm db:seed:qa --revisar` tiene que decir `Limpio`. Cuenta lo sembrado
+> aquí, lo de `seed-dev` (empresas `dev-`) y lo que dejan las suites (`@ejemplo.mx`, `x@y.mx`).
+> Si una suite nueva deja rastro con otro dominio o empresa, se agrega a `DOMINIOS_QA` /
+> `EMPRESAS_QA` en `seed-qa.ts` en el mismo commit que la suite.
+
 ## Cuentas
 
 Todas con la misma contraseña: **`aiuto123`**
 
-Se entra por `/entrar`. Cada rol cae donde le toca: el equipo en `/panel`, los candidatos en
-`/mi`. Si alguien intenta entrar a la zona que no le corresponde, se le redirige.
+Se entra por `/entrar`. Cada rol cae donde le toca: el equipo en `/panel`, las empresas en
+`/reclutamiento` y los candidatos en `/mi`. Si alguien intenta entrar a la zona que no le corresponde, se le redirige.
 
 ### Equipo AIUTO
 
@@ -27,10 +32,17 @@ Se entra por `/entrar`. Cada rol cae donde le toca: el equipo en `/panel`, los c
 | `egresado@qa.aiuto.test` | Efrén, pasante, 0 años | Sin roster, y con una postulación **rechazada**: cómo se ve la mala noticia desde el lado del candidato |
 | `gerente@qa.aiuto.test` | Gina, directora de operaciones, 15 años | Nivel gerencial con roster y **sin postulaciones**: el estado vacío de `/mi` |
 
-### No hay cuentas de empresa
+### Empresas
 
-A propósito: en la Fase 1 el empleador no se autoservicia. Las vacantes las captura el equipo
-AIUTO desde el panel, y las empresas se dan de alta solas al capturar su primera vacante.
+Desde el máster prompt del 23 de noviembre las empresas tienen cuenta: se registran en
+`/empresas/registro`, quedan pendientes y el equipo las aprueba en `/panel/empresas`.
+
+| Correo | Empresa | Qué permite probar |
+| --- | --- | --- |
+| `reclutador@qa.aiuto.test` | Nube Verde (licencia de 10 vacantes) | Panel `/reclutamiento`: vacantes, postulaciones, ficha del candidato, mensajes y avisos |
+| `otra.empresa@qa.aiuto.test` | Metalúrgica del Bajío (licencia de 10 vacantes) | El aislamiento: no puede ver nada de Nube Verde (todo lo ajeno da 404) |
+
+Carla es la única candidata que autorizó que las empresas vean su perfil completo.
 
 ## Postulaciones sin cuenta
 

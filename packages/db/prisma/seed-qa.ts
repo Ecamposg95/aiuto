@@ -8,7 +8,8 @@
  * usuario.
  *
  *   pnpm db:seed:qa              siembra
- *   pnpm db:seed:qa --limpiar    retira todo lo de aquí
+ *   pnpm db:seed:qa --revisar    cuenta lo que queda de prueba, sin borrar; sale con 1 si hay algo
+ *   pnpm db:seed:qa --limpiar    retira todo lo de aquí y lo que dejan las suites de tools/qa
  *
  * Las contraseñas son fijas y están escritas en claro justamente porque son de
  * QA: si alguna sirve en la beta, es que este seed se corrió donde no debía.
@@ -434,20 +435,72 @@ const VACANTES: SemillaVacante[] = [
 
 // --------------------------------------------------------------- limpieza
 
-async function limpiar() {
-  const empresas = await prisma.company.findMany({
-    where: { slug: { startsWith: MARCA } },
-    select: { id: true },
-  })
-  // Vacantes y postulaciones caen en cascada con la empresa.
-  const e = await prisma.company.deleteMany({ where: { id: { in: empresas.map((x) => x.id) } } })
-  const u = await prisma.user.deleteMany({ where: { email: { endsWith: DOMINIO_QA } } })
-  const s = await prisma.solicitud.deleteMany({ where: { correo: { endsWith: DOMINIO_QA } } })
-  const a = await prisma.solicitudAsesoria.deleteMany({ where: { correo: { endsWith: DOMINIO_QA } } })
+// Todo lo que siembra este archivo o dejan las suites de tools/qa. Si una suite
+// nueva usa otro dominio u otra empresa, se agrega AQUÍ en el mismo commit, o la
+// limpieza no la ve.
+const DOMINIOS_QA = [DOMINIO_QA, '@ejemplo.mx']
+const CORREOS_QA = ['x@y.mx']
+// `dev-` es la marca de seed-dev.ts: tampoco es real y tampoco puede llegar a la beta.
+const EMPRESAS_QA = { prefijos: [MARCA, 'dev-'], exactas: ['aceros-del-pacifico'] }
 
-  console.log(
-    `Retirado: ${e.count} empresas, ${u.count} usuarios, ${s.count} solicitudes, ${a.count} asesorías.`,
-  )
+const esCorreoQA = {
+  OR: [...DOMINIOS_QA.map((d) => ({ correo: { endsWith: d } })), { correo: { in: CORREOS_QA } }],
+}
+const esUsuarioQA = {
+  OR: [...DOMINIOS_QA.map((d) => ({ email: { endsWith: d } })), { email: { in: CORREOS_QA } }],
+}
+const esEmpresaQA = {
+  OR: [
+    ...EMPRESAS_QA.prefijos.map((x) => ({ slug: { startsWith: x } })),
+    { slug: { in: EMPRESAS_QA.exactas } },
+  ],
+}
+// Las fichas de un solo uso se guardan como `proposito:correo`.
+const esFichaQA = {
+  OR: [
+    ...DOMINIOS_QA.map((d) => ({ identifier: { endsWith: d } })),
+    ...CORREOS_QA.map((c) => ({ identifier: { endsWith: `:${c}` } })),
+  ],
+}
+
+async function contar() {
+  return {
+    empresas: await prisma.company.count({ where: esEmpresaQA }),
+    vacantesDeEmpresasQA: await prisma.vacante.count({ where: { company: esEmpresaQA } }),
+    postulaciones: await prisma.postulacion.count({ where: esCorreoQA }),
+    usuarios: await prisma.user.count({ where: esUsuarioQA }),
+    solicitudes: await prisma.solicitud.count({ where: esCorreoQA }),
+    asesorias: await prisma.solicitudAsesoria.count({ where: esCorreoQA }),
+    fichas: await prisma.verificationToken.count({ where: esFichaQA }),
+  }
+}
+
+async function revisar() {
+  const c = await contar()
+  console.table(c)
+  const total = Object.values(c).reduce((a, b) => a + b, 0)
+  console.log(total ? `Quedan ${total} registros de prueba.` : 'Limpio: no queda nada de prueba.')
+  process.exitCode = total ? 1 : 0
+}
+
+async function limpiar() {
+  console.log('Antes:')
+  console.table(await contar())
+  await prisma.$transaction([
+    // Primero las postulaciones por correo: las hay de QA en vacantes reales.
+    // Sus mensajes caen en cascada.
+    prisma.postulacion.deleteMany({ where: esCorreoQA }),
+    // Vacantes, licencias, miembros y alertas caen en cascada con la empresa.
+    prisma.company.deleteMany({ where: esEmpresaQA }),
+    prisma.solicitud.deleteMany({ where: esCorreoQA }),
+    prisma.solicitudAsesoria.deleteMany({ where: esCorreoQA }),
+    prisma.verificationToken.deleteMany({ where: esFichaQA }),
+    // La bitácora no se borra: su actor queda en nulo (onDelete: SetNull).
+    // Perfil, trayectoria, guardadas, avisos y membresías caen en cascada.
+    prisma.user.deleteMany({ where: esUsuarioQA }),
+  ])
+  console.log('Después:')
+  await revisar()
 }
 
 // --------------------------------------------------------------- siembra
@@ -682,7 +735,11 @@ async function sembrar() {
   console.log('')
 }
 
-const main = process.argv.includes('--limpiar') ? limpiar : sembrar
+const main = process.argv.includes('--revisar')
+  ? revisar
+  : process.argv.includes('--limpiar')
+    ? limpiar
+    : sembrar
 
 main()
   .then(() => prisma.$disconnect())
