@@ -93,3 +93,62 @@ export async function resolverAlerta(datos: FormData) {
   await bitacora(admin.id, 'Alerta', id, `alerta → ${estado}`)
   revalidatePath('/panel/alertas')
 }
+
+// --------------------------------------------------------------- usuarios
+
+const ROLES_EQUIPO = ['STAFF_ADMIN', 'STAFF_OPERADOR'] as const
+
+/** Que nunca se quede el panel sin un administrador que pueda entrar. */
+async function quedaOtroAdmin(sinContar: string): Promise<boolean> {
+  const n = await prisma.user.count({
+    where: { rol: 'STAFF_ADMIN', desactivadoEn: null, id: { not: sinContar } },
+  })
+  return n > 0
+}
+
+/**
+ * Cambia el rol dentro del equipo (administración ↔ operación). No convierte a
+ * un candidato o a una empresa en equipo ni al revés: eso cambia qué datos ve
+ * la cuenta y se hace a mano, con `pnpm crear-staff`.
+ */
+export async function cambiarRolEquipo(datos: FormData) {
+  const admin = await exigirAdmin()
+  const id = texto(datos, 'id')
+  const rol = texto(datos, 'rol') as (typeof ROLES_EQUIPO)[number]
+  if (!ROLES_EQUIPO.includes(rol)) throw new Error('Rol inválido.')
+  if (id === admin.id) throw new Error('No puedes cambiar tu propio rol.')
+
+  const usuario = await prisma.user.findUniqueOrThrow({ where: { id }, select: { rol: true } })
+  if (!(ROLES_EQUIPO as readonly string[]).includes(usuario.rol)) {
+    throw new Error('Solo se cambia el rol de cuentas del equipo.')
+  }
+  if (usuario.rol === rol) return
+  if (usuario.rol === 'STAFF_ADMIN' && !(await quedaOtroAdmin(id))) {
+    throw new Error('Es el único administrador activo.')
+  }
+
+  await prisma.user.update({ where: { id }, data: { rol } })
+  await bitacora(admin.id, 'User', id, `rol → ${rol}`, { antes: usuario.rol })
+  revalidatePath('/panel/usuarios')
+}
+
+/**
+ * Desactiva o reactiva una cuenta. Desactivada, no puede entrar y su sesión
+ * abierta se corta en la siguiente petición (callback `jwt` de auth.ts). No se
+ * borra nada: sus postulaciones, mensajes y vacantes se quedan como estaban.
+ */
+export async function cambiarActivacion(datos: FormData) {
+  const admin = await exigirAdmin()
+  const id = texto(datos, 'id')
+  const activar = texto(datos, 'activar') === 'si'
+  if (id === admin.id) throw new Error('No puedes desactivar tu propia cuenta.')
+
+  const usuario = await prisma.user.findUniqueOrThrow({ where: { id }, select: { rol: true } })
+  if (!activar && usuario.rol === 'STAFF_ADMIN' && !(await quedaOtroAdmin(id))) {
+    throw new Error('Es el único administrador activo.')
+  }
+
+  await prisma.user.update({ where: { id }, data: { desactivadoEn: activar ? null : new Date() } })
+  await bitacora(admin.id, 'User', id, activar ? 'cuenta reactivada' : 'cuenta desactivada')
+  revalidatePath('/panel/usuarios')
+}

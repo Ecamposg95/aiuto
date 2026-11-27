@@ -4,11 +4,15 @@ import bcrypt from 'bcryptjs'
 import { prisma, type Rol } from '@aiuto/db'
 
 /**
- * Autenticación del equipo AIUTO.
+ * Autenticación de todos: equipo, empresas y candidatos.
  *
- * Con tres personas, los permisos son un campo `rol`, no un sistema: no hay
- * pantalla de administración de usuarios y las cuentas se crean a mano con
- * `pnpm crear-staff`.
+ * Los permisos son un campo `rol`, no un sistema. El equipo se crea con
+ * `pnpm crear-staff`; en /panel/usuarios el administrador cambia el rol dentro
+ * del equipo y desactiva o reactiva cuentas.
+ *
+ * El rol y el estado de la cuenta se releen de la base en cada petición (callback
+ * `jwt`): si el administrador desactiva una cuenta o le cambia el rol, surte
+ * efecto en ese momento y no cuando vence el token, ocho horas después.
  *
  * Estrategia JWT porque el proveedor de credenciales de Auth.js no trabaja con
  * sesiones en base. Cuando llegue el acceso de candidatos con Google (Entrega 2)
@@ -37,6 +41,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const coincide = await bcrypt.compare(password, hash)
 
         if (!usuario || !usuario.passwordHash || !coincide) return null
+        // Misma respuesta que una contraseña equivocada: no se revela que la cuenta existe.
+        if (usuario.desactivadoEn) return null
 
         // Entran todos los roles. Quien puede ver qué lo decide cada zona:
         // /panel exige staff, /reclutamiento exige empresa y /mi exige candidato.
@@ -45,11 +51,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.rol = (user as { rol?: Rol }).rol
         token.sub = user.id
+        return token
       }
+      if (!token.sub) return null
+      // Devolver null cierra la sesión: la cuenta ya no existe o fue desactivada.
+      const actual = await prisma.user.findUnique({
+        where: { id: token.sub },
+        select: { rol: true, desactivadoEn: true },
+      })
+      if (!actual || actual.desactivadoEn) return null
+      token.rol = actual.rol
       return token
     },
     session({ session, token }) {

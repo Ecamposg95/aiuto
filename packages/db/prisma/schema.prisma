@@ -132,6 +132,9 @@ model User {
   // Sólo lo tienen las cuentas del equipo, creadas a mano con tools/crear-staff.
   // Los candidatos entrarán con Google o liga por correo en la Entrega 2.
   passwordHash  String?
+  // El administrador la desactiva desde /panel/usuarios: no puede entrar y su
+  // sesión abierta se corta en la siguiente petición. No se borra nada.
+  desactivadoEn DateTime?
   creadoEn      DateTime  @default(now())
   actualizadoEn DateTime  @updatedAt
 
