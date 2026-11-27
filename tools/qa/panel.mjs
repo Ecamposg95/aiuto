@@ -1,4 +1,8 @@
 import { chromium } from 'playwright'
+import { tmpdir } from 'node:os'
+
+// Dónde quedan las capturas: SALIDA si se definió, si no la carpeta temporal.
+const CAPTURAS = process.env.SALIDA ?? tmpdir()
 
 const BASE = process.env.BASE ?? 'http://localhost:3100'
 const CORREO = 'admin@qa.aiuto.test'
@@ -47,7 +51,7 @@ await p.click('button[type=submit]')
 await p.waitForURL('**/panel', { timeout: 60000 })
 ok(p.url().endsWith('/panel'), 'entra al panel')
 ok(await esperaTexto(p, 'Ana Admin'), 'saluda por nombre')
-await p.screenshot({ path: `${process.env.SALIDA}/panel-bandeja.png`, fullPage: true })
+await p.screenshot({ path: `${CAPTURAS}/panel-bandeja.png`, fullPage: true })
 
 // Cuantas hay antes de publicar, para comparar despues sin fijar un numero.
 const previa = await nav.newContext().then(c => c.newPage())
@@ -57,7 +61,7 @@ await previa.close()
 
 // 4. El formulario rechaza un sueldo maximo menor que el minimo
 await p.goto(`${BASE}/panel/vacantes/nueva`, { waitUntil: 'load' })
-await p.screenshot({ path: `${process.env.SALIDA}/panel-nueva-vacante.png`, fullPage: true })
+await p.screenshot({ path: `${CAPTURAS}/panel-nueva-vacante.png`, fullPage: true })
 
 const llenar = async (sueldoMax) => {
   await p.fill('input[name=empresa]', 'Aceros del Pacifico')
@@ -96,7 +100,7 @@ await p.waitForURL('**/panel/vacantes', { timeout: 60000 })
 ok(await esperaTexto(p, 'Jefe de Producción'), 'la vacante aparece en el panel')
 ok(await esperaTexto(p, '$50,000 – $62,000 MXN mensuales'), 'con su sueldo')
 ok(await esperaTexto(p, 'Abierta'), 'publicada como abierta')
-await p.screenshot({ path: `${process.env.SALIDA}/panel-vacantes.png`, fullPage: true })
+await p.screenshot({ path: `${CAPTURAS}/panel-vacantes.png`, fullPage: true })
 
 // 6. Ya se ve en la bolsa publica, sin sesion
 const anon = await nav.newContext()

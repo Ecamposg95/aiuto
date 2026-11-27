@@ -1,4 +1,8 @@
 import { chromium } from 'playwright'
+import { tmpdir } from 'node:os'
+
+// Dónde quedan las capturas: SALIDA si se definió, si no la carpeta temporal.
+const CAPTURAS = process.env.SALIDA ?? tmpdir()
 
 const BASE = process.env.BASE ?? 'http://localhost:3100'
 const PASS = 'aiuto123'
@@ -35,7 +39,7 @@ ok(await txt(p, 'Carla Candidata'), 'lo saluda por nombre')
 ok(await txt(p, 'Ingeniera de plataforma'), 've la vacante a la que aplico')
 ok(await txt(p, 'Entrevista'), 'el avance marca el paso donde va')
 ok(await txt(p, 'poner en contacto contigo para agendarla'), 'y lo explica en palabras')
-await p.screenshot({ path: `${process.env.SALIDA}/mi-postulaciones.png`, fullPage: true })
+await p.screenshot({ path: `${CAPTURAS}/mi-postulaciones.png`, fullPage: true })
 
 // El panel del equipo le queda cerrado
 await p.goto(`${BASE}/panel`, { waitUntil: 'load' })
@@ -58,7 +62,7 @@ await p.click('button:has-text("Guardar cambios")')
 ok(await txt(p, 'Guardado'), 'guarda el perfil corregido')
 await p.reload({ waitUntil: 'load' })
 ok((await p.inputValue('input[name=titular]')) === 'Desarrolladora backend senior', 'el cambio persiste')
-await p.screenshot({ path: `${process.env.SALIDA}/mi-perfil.png`, fullPage: true })
+await p.screenshot({ path: `${CAPTURAS}/mi-perfil.png`, fullPage: true })
 
 // ---------- 3. Registro nuevo: su historial espera a que confirme el correo ----------
 const nuevo = `nuevo.${Date.now()}@qa.aiuto.test`

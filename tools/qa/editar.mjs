@@ -1,4 +1,8 @@
 import { chromium } from 'playwright'
+import { tmpdir } from 'node:os'
+
+// Dónde quedan las capturas: SALIDA si se definió, si no la carpeta temporal.
+const CAPTURAS = process.env.SALIDA ?? tmpdir()
 const B = process.env.BASE ?? 'http://localhost:3100'
 let fallos = 0
 const ok = (c, e, d = '') => { console.log(`${c ? '  ok  ' : ' FALLA'} ${e}${d ? ' — ' + d : ''}`); if (!c) fallos++ }
@@ -32,7 +36,7 @@ await p.waitForTimeout(500)
 ok((await p.inputValue('input[name=puesto]')) === 'Jefe de producción', 'llena el puesto')
 ok((await p.inputValue('input[name=sueldoMin]')) === '48000', 'llena el sueldo')
 ok((await p.inputValue('select[name=categoryId]')) !== '', 'elige categoría')
-await p.screenshot({ path: `${process.env.SALIDA}/panel-ejemplo.png`, fullPage: true })
+await p.screenshot({ path: `${CAPTURAS}/panel-ejemplo.png`, fullPage: true })
 
 await p.click('button[name=publicar][value=si]')
 await p.waitForURL('**/panel/vacantes', { timeout: 30000 })
@@ -45,7 +49,7 @@ await p.waitForURL('**/editar', { timeout: 20000 })
 ok((await p.inputValue('input[name=puesto]')) === 'Jefe de producción', 'el formulario llega precargado')
 ok((await p.inputValue('input[name=sueldoMax]')) === '62000', 'con el sueldo actual')
 ok((await p.inputValue('select[name=modalidad]')) === 'HIBRIDO', 'y con la modalidad actual')
-await p.screenshot({ path: `${process.env.SALIDA}/panel-editar.png`, fullPage: true })
+await p.screenshot({ path: `${CAPTURAS}/panel-editar.png`, fullPage: true })
 
 await p.fill('input[name=puesto]', 'Jefe de producción corregido')
 await p.fill('input[name=sueldoMin]', '52000')
