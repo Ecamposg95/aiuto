@@ -1,0 +1,35 @@
+name: Vigilar produccion
+
+# Cada 10 minutos. Si /api/salud no responde 200 con la base arriba, el job
+# falla y GitHub avisa por correo a quien tenga activadas las notificaciones de
+# Actions (Settings -> Notifications -> Actions -> "Send notifications for
+# failed workflows only"). No cuesta nada (el repo es publico) y no depende de
+# Railway para avisar que Railway se cayo.
+#
+# GitHub puede retrasar los cron unos minutos cuando hay mucha carga: sirve
+# para enterarse en minutos, no en segundos.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+# Si una corrida se atora, la siguiente no se encima.
+concurrency:
+  group: vigilar
+  cancel-in-progress: false
+
+jobs:
+  salud:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Consultar /api/salud
+        run: |
+          for intento in 1 2 3; do
+            cuerpo=$(curl -sS -m 20 "${{ vars.APP_URL }}/api/salud" || true)
+            echo "intento $intento: $cuerpo"
+            echo "$cuerpo" | grep -q '"base":"ok"' && exit 0
+            sleep 20
+          done
+          echo "::error::La aplicacion no esta sana despues de 3 intentos: ${{ vars.APP_URL }}"
+          exit 1
